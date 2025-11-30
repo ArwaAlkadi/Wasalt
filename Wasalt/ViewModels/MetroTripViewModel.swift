@@ -5,15 +5,747 @@
 //  Created by Arwa Alkadi on 19/11/2025.
 //
 
-//
-// MetroTripViewModel
-// يدير كامل منطق رحلة المترو:
-// - اختيار المحطة
-// - بدء التتبع وإيقافه
-// - تحديد أقرب محطة للمستخدم
-// - حساب الوقت المتبقي
-// - إظهار شيت الوصول عند الانتهاء
-// - التعامل مع سيناريوهات "غير قريب من محطة" أو "بدون إذن موقع"
-//
 
-import Foundation
+import SwiftUI
+import MapKit
+import AVFoundation
+import Combine
+
+
+/*
+ 🔴 File Contents | محتوى الكود
+     •    MetroTripViewModel → handles trip flow, ETA updates, and arrival logic.
+     •    InAppAlertManager → manages in-app alerts (banner + vibration + flash).
+ */
+
+
+//MARK:  -MetroTripViewModel → handles trip flow, ETA updates, and arrival logic.
+final class MetroTripViewModel: ObservableObject {
+    
+    private let stations: [Station]
+    private let notificationManager: LocalNotificationManager
+    
+    // حالة الرحلة
+    @Published var selectedDestination: Station?
+    @Published var isTracking: Bool = false
+    @Published var startStation: Station?
+    @Published var currentNearestStation: Station?
+    @Published var lastPassedStation: Station?
+    @Published var nextStation: Station?
+    @Published var stationsRemaining: Int = 0
+    @Published var etaMinutes: Int = 0
+    @Published var statusText: String = ""
+    @Published var showArrivalSheet: Bool = false
+    @Published var activeAlert: MetroAlertType? = nil
+    
+    let nearStationDistance: CLLocationDistance = 1000.0
+
+    private let arrivalDistance: CLLocationDistance = 100.0
+    
+    private enum TripDirection { case forward, backward }
+    private var tripDirection: TripDirection?
+    private var didFireApproachingAlert = false
+    private var didFireArrivalAlert = false
+    private var isChangingDestination: Bool = false
+    
+    init(
+        stations: [Station],
+        notificationManager: LocalNotificationManager = .shared
+    ) {
+        self.stations = stations
+        self.notificationManager = notificationManager
+    }
+    
+    func selectDestination(_ station: Station) {
+        selectedDestination = station
+    }
+    
+    func startTrip(userLocation: CLLocation?) {
+        guard let dest = selectedDestination else {
+            statusText = "اختر محطتك أولاً."
+            return
+        }
+        
+        if isChangingDestination {
+            guard let baseStation = lastPassedStation ?? startStation else {
+                statusText = "ما قدرنا نعرف آخر محطة ركبت منها."
+                return
+            }
+            startStation = baseStation
+            
+            if dest.order == baseStation.order {
+                currentNearestStation = dest
+                stationsRemaining = 0
+                etaMinutes = 0
+                nextStation = nil
+                statusText = "أنت بالفعل في محطتك: \(dest.name)"
+                showArrivalSheet = true
+                isTracking = false
+                activeAlert = .arrival(stationName: dest.name)
+                notificationManager.cancelTripNotifications()
+                return
+            }
+            
+            if dest.order > baseStation.order {
+                tripDirection = .forward
+            } else {
+                tripDirection = .backward
+            }
+            
+            isTracking = true
+            showArrivalSheet = false
+            didFireApproachingAlert = false
+            didFireArrivalAlert = false
+            statusText = ""
+            isChangingDestination = false
+            
+            let fakeLocation = CLLocation(latitude: baseStation.coordinate.latitude,
+                                          longitude: baseStation.coordinate.longitude)
+            updateProgress(for: fakeLocation)
+            
+            if etaMinutes > 3 {
+                notificationManager.scheduleApproachingNotification(
+                    inMinutes: max(etaMinutes - 3, 1),
+                    stationName: dest.name
+                )
+            }
+            if etaMinutes > 0 {
+                notificationManager.scheduleArrivalNotification(
+                    inMinutes: etaMinutes,
+                    stationName: dest.name
+                )
+            }
+            return
+        }
+        
+        guard let location = userLocation else {
+            statusText = "ماتقدر تبدأ: موقعك غير معروف."
+            return
+        }
+        guard isUserNearAnyStation(userLocation: location) else {
+            statusText = "قرب من أي محطة عشان تقدر تبدأ الرحلة."
+            return
+        }
+        guard let startSt = nearestStation(to: location) else {
+            statusText = "ما قدرنا نحدد أقرب محطة."
+            return
+        }
+        
+        startStation = startSt
+        lastPassedStation = startSt
+        
+        if dest.order == startSt.order {
+            currentNearestStation = dest
+            stationsRemaining = 0
+            etaMinutes = 0
+            nextStation = nil
+            statusText = "أنت بالفعل في محطتك: \(dest.name)"
+            showArrivalSheet = true
+            isTracking = false
+            activeAlert = .arrival(stationName: dest.name)
+            notificationManager.cancelTripNotifications()
+            return
+        }
+        
+        // اتجاه الرحلة
+        if dest.order > startSt.order {
+            tripDirection = .forward
+        } else {
+            tripDirection = .backward
+        }
+        
+        isTracking = true
+        showArrivalSheet = false
+        didFireApproachingAlert = false
+        didFireArrivalAlert = false
+        statusText = ""
+        
+        updateProgress(for: location)
+        
+        // إشعارات باك أب بالوقت (Plan B لو الـ GPS انقطع)
+        if etaMinutes > 3 {
+            notificationManager.scheduleApproachingNotification(
+                inMinutes: max(etaMinutes - 3, 1),
+                stationName: dest.name
+            )
+        }
+        if etaMinutes > 0 {
+            notificationManager.scheduleArrivalNotification(
+                inMinutes: etaMinutes,
+                stationName: dest.name
+            )
+        }
+    }
+    
+    // تحديث من الموقع الحقيقي
+    func userLocationUpdated(_ location: CLLocation?) {
+        guard isTracking, let location = location else { return }
+        updateProgress(for: location)
+    }
+    
+    func endTripAndReset() {
+        isTracking = false
+        resetProgress(keepDestination: false)
+        statusText = ""
+        notificationManager.cancelTripNotifications()
+    }
+    
+   
+    func cancelAndChooseAgain() {
+        isTracking = false
+        // نحتفظ بأقرب محطة وآخر محطة
+        if let current = currentNearestStation {
+            lastPassedStation = current
+        }
+        // نفرغ الوجهة فقط
+        selectedDestination = nil
+        nextStation = nil
+        stationsRemaining = 0
+        etaMinutes = 0
+        showArrivalSheet = false
+        tripDirection = nil
+        didFireApproachingAlert = false
+        didFireArrivalAlert = false
+        activeAlert = nil
+        statusText = ""
+        isChangingDestination = true
+        notificationManager.cancelTripNotifications()
+    }
+    
+    func clearActiveAlert() {
+        activeAlert = nil
+    }
+    
+    
+    private func updateProgress(for location: CLLocation) {
+        guard let dest = selectedDestination,
+              let nearest = nearestStation(to: location) else { return }
+        
+        if currentNearestStation?.order != nearest.order {
+            lastPassedStation = nearest
+        }
+        currentNearestStation = nearest
+        
+        let result = computeRemainingStationsAndTime(from: nearest, to: dest)
+        stationsRemaining = result.stations
+        etaMinutes = result.minutes
+        nextStation = result.next
+        
+        let destLocation = CLLocation(latitude: dest.coordinate.latitude,
+                                      longitude: dest.coordinate.longitude)
+        let distanceToDest = destLocation.distance(from: location)
+        
+        if distanceToDest <= arrivalDistance {
+            statusText = "وصلت إلى محطتك: \(dest.name)"
+            isTracking = false
+            showArrivalSheet = true
+            
+            if !didFireArrivalAlert {
+                activeAlert = .arrival(stationName: dest.name)
+                didFireArrivalAlert = true
+                notificationManager.cancelTripNotifications()
+                notificationManager.scheduleArrivalNotification(
+                    inMinutes: 0,
+                    stationName: dest.name
+                )
+            }
+            return
+        }
+        
+        statusText = ""
+        
+        if !didFireApproachingAlert, let direction = tripDirection {
+            var previousOrder: Int?
+            switch direction {
+            case .forward:
+                previousOrder = dest.order - 1
+            case .backward:
+                previousOrder = dest.order + 1
+            }
+            
+            if let prevOrder = previousOrder,
+               prevOrder != dest.order,
+               let prevStation = stations.first(where: { $0.order == prevOrder }),
+               nearest.order == prevStation.order {
+                
+                activeAlert = .approaching(
+                    stationName: dest.name,
+                    etaMinutes: etaMinutes
+                )
+                didFireApproachingAlert = true
+                
+                notificationManager.scheduleApproachingNotification(
+                    inMinutes: 0,
+                    stationName: dest.name
+                )
+            }
+        }
+    }
+    
+    private func computeRemainingStationsAndTime(from current: Station, to dest: Station)
+    -> (stations: Int, minutes: Int, next: Station?) {
+        guard let direction = tripDirection else {
+            let diff = abs(dest.order - current.order)
+            return (diff, 0, nil)
+        }
+        
+        var totalMinutes = 0
+        var count = 0
+        var next: Station?
+        
+        switch direction {
+        case .forward:
+            if current.order >= dest.order { return (0, 0, nil) }
+            for order in current.order..<dest.order {
+                if let st = stations.first(where: { $0.order == order }) {
+                    if count == 0 {
+                        next = stations.first(where: { $0.order == order + 1 })
+                    }
+                    totalMinutes += st.minutesToNext ?? 0
+                    count += 1
+                }
+            }
+        case .backward:
+            if current.order <= dest.order { return (0, 0, nil) }
+            for order in stride(from: current.order, to: dest.order, by: -1) {
+                if let st = stations.first(where: { $0.order == order }) {
+                    if count == 0 {
+                        next = stations.first(where: { $0.order == order - 1 })
+                    }
+                    totalMinutes += st.minutesToNext ?? 0
+                    count += 1
+                }
+            }
+        }
+        
+        return (count, totalMinutes, next)
+    }
+    
+    private func nearestStation(to location: CLLocation) -> Station? {
+        stations.min { lhs, rhs in
+            let lhsLoc = CLLocation(latitude: lhs.coordinate.latitude,
+                                    longitude: lhs.coordinate.longitude)
+            let rhsLoc = CLLocation(latitude: rhs.coordinate.latitude,
+                                    longitude: rhs.coordinate.longitude)
+            return lhsLoc.distance(from: location) < rhsLoc.distance(from: location)
+        }
+    }
+    
+    private func isUserNearAnyStation(userLocation: CLLocation) -> Bool {
+        for station in stations {
+            let stLoc = CLLocation(latitude: station.coordinate.latitude,
+                                   longitude: station.coordinate.longitude)
+            if stLoc.distance(from: userLocation) <= nearStationDistance {
+                return true
+            }
+        }
+        return false
+    }
+    
+    private func resetProgress(keepDestination: Bool) {
+        if !keepDestination {
+            selectedDestination = nil
+            startStation = nil
+            lastPassedStation = nil
+        }
+        currentNearestStation = nil
+        nextStation = nil
+        stationsRemaining = 0
+        etaMinutes = 0
+        showArrivalSheet = false
+        tripDirection = nil
+        didFireApproachingAlert = false
+        didFireArrivalAlert = false
+        activeAlert = nil
+        isChangingDestination = false
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// MARK:  -InAppAlertManager → manages in-app alerts (banner + vibration + flash).
+final class InAppAlertManager: ObservableObject {
+    @Published var isShowingBanner: Bool = false
+    @Published var bannerTitle: String = ""
+    @Published var bannerMessage: String = ""
+    
+    private var flashTimer: Timer?
+    private var isTorchOn: Bool = false
+    private var isPatternRunning: Bool = false
+    
+    /// أقصى مدة نشغّل فيها النمط قبل ما نوقفه تلقائياً (فلاش + اهتزاز) – 15 ثانية
+    private let maxPatternDuration: TimeInterval = 15
+    /// مدة بقاء البانر على الشاشة قبل ما يختفي تلقائياً – 5 دقائق
+    private let bannerAutoDismiss: TimeInterval = 5 * 60
+    
+    // عرض التنبيه
+    func showCriticalAlert(title: String) {
+        bannerTitle = title
+        bannerMessage = ""
+        isShowingBanner = true
+        startPatternVibrationAndFlash()
+        
+        // إخفاء البانر تلقائياً بعد 5 دقائق إذا ما قفله المستخدم
+        DispatchQueue.main.asyncAfter(deadline: .now() + bannerAutoDismiss) { [weak self] in
+            guard let self = self, self.isShowingBanner else { return }
+            self.dismiss()
+        }
+    }
+    
+    // إخفاء التنبيه (من زر X مثلاً)
+    func dismiss() {
+        isShowingBanner = false
+        stopPatternVibrationAndFlash()
+    }
+    
+    // النمط (اهتزاز + فلاش)
+    
+    /// يبدأ نمط متكرر: كل 0.35 ثانية → يهز ويقلب وضع الفلاش
+    private func startPatternVibrationAndFlash() {
+        stopPatternVibrationAndFlash()
+        isPatternRunning = true
+        
+        flashTimer = Timer.scheduledTimer(withTimeInterval: 0.35, repeats: true) { [weak self] _ in
+            guard let self = self, self.isPatternRunning else { return }
+            self.vibrateOnce()
+            self.toggleTorch()
+        }
+        
+        // إيقاف تلقائي بعد maxPatternDuration ثواني
+        DispatchQueue.main.asyncAfter(deadline: .now() + maxPatternDuration) { [weak self] in
+            self?.stopPatternVibrationAndFlash()
+        }
+    }
+    
+    /// يوقف النمط ويطفئ الفلاش
+    private func stopPatternVibrationAndFlash() {
+        isPatternRunning = false
+        flashTimer?.invalidate()
+        flashTimer = nil
+        setTorch(on: false)
+    }
+    
+    /// هزّة واحدة
+    private func vibrateOnce() {
+        AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
+    }
+    
+    /// قلب حالة الفلاش (تشغيل/إطفاء)
+    private func toggleTorch() {
+        isTorchOn.toggle()
+        setTorch(on: isTorchOn)
+    }
+    
+    /// تشغيل/إطفاء فلاش الكاميرا الخلفية
+    private func setTorch(on: Bool) {
+        // في السيميوليتر ما فيه كاميرا، فـ guard يحمي من المشاكل
+        guard let device = AVCaptureDevice.default(.builtInWideAngleCamera,
+                                                   for: .video,
+                                                   position: .back),
+              device.hasTorch else { return }
+        do {
+            try device.lockForConfiguration()
+            if on {
+                try device.setTorchModeOn(level: 1.0)
+            } else {
+                device.torchMode = .off
+            }
+            device.unlockForConfiguration()
+        } catch {
+            print("Torch error:", error.localizedDescription)
+        }
+    }
+}
+
+enum MetroAlertType: Equatable {
+    case approaching(stationName: String, etaMinutes: Int)
+    case arrival(stationName: String)
+}
+
+
+
+
+
+
+
+
+
+
+//MARK: -VIEW
+struct MainMetroView: View {
+    @StateObject private var locationManager = LocationManager()
+    @StateObject private var permissionsVM = PermissionsViewModel()
+    @StateObject private var metroVM = MetroTripViewModel(stations: yellowLineStations)
+    @StateObject private var alertManager = InAppAlertManager()
+    
+    @State private var region = MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 24.82, longitude: 46.68),
+        span: MKCoordinateSpan(latitudeDelta: 0.15, longitudeDelta: 0.15)
+    )
+    
+    var body: some View {
+        ZStack {
+
+            Map(
+                coordinateRegion: $region,
+                showsUserLocation: true,
+                annotationItems: yellowLineStations
+            ) { station in
+                MapAnnotation(coordinate: station.coordinate) {
+                    VStack(spacing: 4) {
+                        Image(systemName: "mappin.circle.fill")
+                            .foregroundColor(.red)
+                        Text(station.name)
+                            .font(.caption2)
+                            .padding(2)
+                            .background(.ultraThinMaterial)
+                            .cornerRadius(4)
+                    }
+                }
+            }
+            .ignoresSafeArea()
+            
+            VStack {
+
+                if alertManager.isShowingBanner {
+                    bannerView
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .padding(.top, 8)
+                }
+                
+                Spacer()
+                
+                bottomSheet
+                    .padding(.horizontal)
+                    .padding(.bottom, 8)
+            }
+        }
+        .onAppear {
+            permissionsVM.requestLocationPermission()
+            permissionsVM.requestNotificationPermission()
+            locationManager.requestPermission()
+            locationManager.start()
+        }
+        .onChange(of: locationManager.userLocation) { newLoc in
+            if let loc = newLoc {
+                region.center = loc.coordinate
+                metroVM.userLocationUpdated(loc)
+            }
+        }
+        // مراقبة activeAlert من ViewModel الرحلة
+        .onChange(of: metroVM.activeAlert) { alert in
+            guard let alert = alert else { return }
+            switch alert {
+            case .approaching(let name, _):
+                alertManager.showCriticalAlert(
+                    title: "اقتربت من محطتك \(name)"
+                )
+            case .arrival(let name):
+                alertManager.showCriticalAlert(
+                    title: "وصلت إلى محطتك \(name)"
+                )
+            }
+            // ننظف قيمة التنبيه في دورة حدث ثانية عشان ما يطلع تحذير
+            DispatchQueue.main.async {
+                metroVM.clearActiveAlert()
+            }
+        }
+        // Alert: فعّل الموقع من الإعدادات
+        .alert("فعّل الموقع", isPresented: $permissionsVM.showLocationSettingsAlert) {
+            Button("فتح الإعدادات") {
+                permissionsVM.openAppSettings()
+            }
+            Button("إلغاء", role: .cancel) { }
+        } message: {
+            Text("يحتاج التطبيق إذن الوصول للموقع حتى يقدر يتابع رحلتك في المترو.")
+        }
+        // Alert: فعّل الإشعارات من الإعدادات
+        .alert("فعّل الإشعارات", isPresented: $permissionsVM.showNotificationSettingsAlert) {
+            Button("فتح الإعدادات") {
+                permissionsVM.openAppSettings()
+            }
+            Button("إلغاء", role: .cancel) { }
+        } message: {
+            Text("فعّل الإشعارات حتى نقدر ننبهك قبل وصولك للمحطة وعند الوصول.")
+        }
+    }
+    
+    // Banner in-app
+    private var bannerView: some View {
+        HStack {
+            VStack(alignment: .trailing, spacing: 4) {
+                Text(alertManager.bannerTitle)
+                    .font(.headline)
+                    .foregroundColor(.white)
+                if !alertManager.bannerMessage.isEmpty {
+                    Text(alertManager.bannerMessage)
+                        .font(.subheadline)
+                        .foregroundColor(.white.opacity(0.9))
+                }
+            }
+            Spacer()
+            Button {
+                alertManager.dismiss()
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundColor(.white.opacity(0.9))
+                    .font(.title3)
+            }
+        }
+        .padding()
+        .background(Color.green.opacity(0.95))
+        .cornerRadius(16)
+        .shadow(radius: 5)
+        .padding(.horizontal)
+    }
+    
+    // الشيت السفلي (اختيار الوجهة / متابعة الرحلة)
+    private var bottomSheet: some View {
+        VStack(spacing: 12) {
+            Capsule()
+                .fill(Color.secondary.opacity(0.4))
+                .frame(width: 40, height: 5)
+                .padding(.top, 8)
+            
+            if !metroVM.isTracking || metroVM.selectedDestination == nil {
+                // حالة اختيار الوجهة
+                VStack(alignment: .trailing, spacing: 8) {
+                    Text("اختر محطتك")
+                        .font(.headline)
+                    
+                    ScrollView {
+                        VStack(spacing: 4) {
+                            ForEach(yellowLineStations) { station in
+                                Button {
+                                    metroVM.selectDestination(station)
+                                } label: {
+                                    HStack {
+                                        if station.id == metroVM.selectedDestination?.id {
+                                            Image(systemName: "checkmark.circle.fill")
+                                                .foregroundColor(.green)
+                                        }
+                                        Spacer()
+                                        Text(station.name)
+                                    }
+                                    .padding(.vertical, 6)
+                                }
+                                .foregroundColor(.primary)
+                            }
+                        }
+                    }
+                    .frame(maxHeight: 180)
+                    
+                    Button {
+                        // ما نبدأ الرحلة إلا إذا كل الأذونات مفعّلة
+                        if permissionsVM.areAllPermissionsGranted {
+                            metroVM.startTrip(userLocation: locationManager.userLocation)
+                        } else {
+                            if !permissionsVM.isLocationAuthorized {
+                                permissionsVM.showLocationSettingsAlert = true
+                            } else if !permissionsVM.isNotificationAuthorized {
+                                permissionsVM.showNotificationSettingsAlert = true
+                            }
+                        }
+                    } label: {
+                        Text("ابدأ الرحلة")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(metroVM.selectedDestination == nil ? Color.gray : Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
+                    }
+                    .disabled(metroVM.selectedDestination == nil)
+                    
+                    if !permissionsVM.areAllPermissionsGranted {
+                        Text("فعّل الموقع والإشعارات من الإعدادات قبل بدء الرحلة.")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                            .padding(.bottom, 4)
+                    }
+                    
+                    if !metroVM.statusText.isEmpty {
+                        Text(metroVM.statusText)
+                            .font(.footnote)
+                            .foregroundColor(.red)
+                            .padding(.bottom, 8)
+                    }
+                }
+            } else {
+                // حالة متابعة الرحلة
+                VStack(alignment: .trailing, spacing: 8) {
+                    HStack {
+                        Button {
+                            metroVM.cancelAndChooseAgain()
+                        } label: {
+                            Text("بغيّر محطتي")
+                                .font(.subheadline)
+                        }
+                    }
+                    
+                    Text("الوقت المتوقع للوصول: ~\(metroVM.etaMinutes) دقيقة")
+                        .bold()
+                       
+                    
+                    Text("البداية: \(metroVM.startStation?.name ?? "-")")
+                    Text("وجهتك: \(metroVM.selectedDestination?.name ?? "-")")
+                    
+                    Text("المحطة القادمة: \(metroVM.nextStation?.name ?? "-")")
+                        .bold()
+                   
+                    
+                    
+                    if !metroVM.statusText.isEmpty {
+                        Text(metroVM.statusText)
+                            .font(.footnote)
+                            .foregroundColor(.red)
+                    }
+                    
+                    Button {
+                        metroVM.endTripAndReset()
+                    } label: {
+                        Text("إنهاء الرحلة")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.red)
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
+                    }
+                    .padding(.top, 4)
+                }
+                .padding(.bottom, 8)
+            }
+        }
+        .padding(.horizontal)
+        .padding(.bottom, 8)
+        .background(.ultraThinMaterial)
+        .cornerRadius(20)
+    }
+}
+
+struct Station: Identifiable {
+    let id = UUID()
+    let name: String
+    let order: Int
+    let coordinate: CLLocationCoordinate2D
+    let minutesToNext: Int?
+}
+
+let yellowLineStations: [Station] = [
+    
+]

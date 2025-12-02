@@ -486,16 +486,3 @@ enum MetroAlertType: Equatable {
 
 
 
-
-//MARK: - مودل مؤقت
-struct Station: Identifiable {
-    let id = UUID()
-    let name: String
-    let order: Int
-    let coordinate: CLLocationCoordinate2D
-    let minutesToNext: Int?
-}
-
-let yellowLineStations: [Station] = [
-    
-]

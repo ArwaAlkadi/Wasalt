@@ -28,8 +28,10 @@ struct ArrivedSheet: View {
                         
                         ZStack {
                             Circle()
-                                .foregroundStyle(.mainGreen.opacity(0.5))
+                                .foregroundStyle(.mainGreen.opacity(0.5))//
                                 .frame(width:30, height: 30)
+                                .glassEffect(.clear.tint(Color.secondGreen))
+
                             
                             Image(systemName: "xmark")
                                 .foregroundStyle(.whiteBlack)
@@ -45,7 +47,8 @@ struct ArrivedSheet: View {
                     Circle()
                         .fill(Color.mainGreen)
                         .frame(width: 220, height: 220)
-                    
+                        .glassEffect(.clear.tint(.green))
+
                     Image(scheme == .dark ? "MetroDark" : "MetroLight")
                         .resizable()
                         .scaledToFit()
@@ -65,6 +68,8 @@ struct ArrivedSheet: View {
                         .frame(width: 200, height: 25)
                         .padding(.vertical, 15)
                         .background(Color.secondGreen)
+                        .glassEffect(.clear)
+                    
                         .cornerRadius(25)
                 }
                 .padding(.bottom, 35)

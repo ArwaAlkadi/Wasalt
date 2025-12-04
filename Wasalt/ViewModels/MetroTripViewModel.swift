@@ -48,7 +48,7 @@ final class MetroTripViewModel: ObservableObject {
     @Published var showArrivalSheet: Bool = false
     @Published var activeAlert: MetroAlertType? = nil
     
-    let nearStationDistance: CLLocationDistance = 1000.0
+    let nearStationDistance: CLLocationDistance = 100000.0
 
     private let arrivalDistance: CLLocationDistance = 100.0
     

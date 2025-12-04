@@ -79,6 +79,8 @@ struct MainView: View {
                         .padding(.vertical, 15)
                         .background(Color.mainGreen)
                         .cornerRadius(25)
+                        .glassEffect(.clear.tint(Color.mainGreen))
+
                 }
                 .padding(.bottom, 15)
             }

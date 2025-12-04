@@ -113,8 +113,11 @@ private extension StationSheetView {
                 .padding(.vertical, 15)
                 .background(Color.secondGreen)
                 .cornerRadius(25)
+                .glassEffect(.clear.tint(Color.mainGreen))
+
         }
         .padding(.bottom, 15)
+
     }
     
     func stationRow(for station: Station) -> some View {
@@ -130,6 +133,7 @@ private extension StationSheetView {
                         .background(
                             RoundedRectangle(cornerRadius: 12)
                                 .fill(Color.stationGreen1)
+                              
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 12)
                                         .stroke(
@@ -143,6 +147,7 @@ private extension StationSheetView {
                                             lineWidth: 5
                                         )
                                 )
+                                
                         )
                 }
             }
@@ -168,3 +173,15 @@ private extension StationSheetView {
         }
     }
 }
+
+#Preview {
+    StatefulPreviewWrapper(false) { isPresented in
+        StationSheetView(
+            metroVM: MetroTripViewModel(stations: MetroData.yellowLineStations),
+            permissionsVM: PermissionsViewModel(),
+            showSheet: isPresented,
+            getCurrentLocation: { nil }
+        )
+    }
+}
+

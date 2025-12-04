@@ -84,7 +84,9 @@ struct OnboardingView: View {
                                 Image(systemName: "chevron.right.circle.fill")
                                     .font(.system(size: 40))
                                     .foregroundColor(.mainGreen)
+
                                     .padding(.trailing, 20)
+                                
                             }
                         }
                     }

@@ -57,6 +57,8 @@ struct TrackingSheet: View {
                             Circle()
                                 .fill(Color.mainGreen)
                                 .frame(width: 55, height: 55)
+                                .glassEffect(.clear.tint(Color.mainGreen))
+
                             
                             Image(scheme == .dark ? "LocationDark" : "LocationLight")
                                 .resizable()
@@ -97,6 +99,8 @@ struct TrackingSheet: View {
                             Circle()
                                 .fill(Color.mainGreen)
                                 .frame(width: 55, height: 55)
+                                .glassEffect(.clear.tint(Color.mainGreen))
+
                             
                             Image(scheme == .dark ? "LocationDark" : "LocationLight")
                                 .resizable()
@@ -119,6 +123,8 @@ struct TrackingSheet: View {
                             .padding(.vertical, 15)
                             .background(Color.red.opacity(0.8))
                             .cornerRadius(25)
+                            .glassEffect(.clear.tint(Color.red))
+
                     }
                     .padding(.vertical, 15)
                     
@@ -134,6 +140,8 @@ struct TrackingSheet: View {
                             .padding(.vertical, 15)
                             .background(Color.mainGreen)
                             .cornerRadius(25)
+                            .glassEffect(.clear.tint(Color.mainGreen))
+
                     }
                     .padding(.vertical, 15)
                     

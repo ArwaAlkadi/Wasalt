@@ -6,11 +6,13 @@
 //  Created by Arwa Alkadi on 02/12/2025.
 //
 
+
 import SwiftUI
 import CoreLocation
 
 struct StationSheetView: View {
     
+    @Environment(\.colorScheme) var colorScheme
     @ObservedObject var metroVM: MetroTripViewModel
     @ObservedObject var permissionsVM: PermissionsViewModel
     
@@ -42,7 +44,6 @@ struct StationSheetView: View {
 }
 
 // MARK: - Sections
-
 private extension StationSheetView {
     
     var headerSection: some View {
@@ -55,9 +56,9 @@ private extension StationSheetView {
     }
     
     var statusSection: some View {
-        HStack {
+        HStack (spacing: 3) {
             Text(metroVM.statusText)
-                .font(.body)
+                .font(.subheadline)
                 .foregroundColor(.yellow)
             
             Image(systemName: "exclamationmark.triangle")
@@ -91,20 +92,27 @@ private extension StationSheetView {
     
     var startButtonSection: some View {
         Button(action: {
-            if permissionsVM.areAllPermissionsGranted {
-                let location = getCurrentLocation()
-                metroVM.startTrip(userLocation: location)
-
-                if metroVM.isTracking {
-                    showSheet = false
-                }
-            } else {
-                if !permissionsVM.isLocationAuthorized {
-                    permissionsVM.showLocationSettingsAlert = true
-                } else if !permissionsVM.isNotificationAuthorized {
-                    permissionsVM.showNotificationSettingsAlert = true
-                }
+            
+            permissionsVM.refreshPermissions()
+            
+            if !permissionsVM.isLocationAuthorized {
+                permissionsVM.requestLocationPermission()
+                permissionsVM.showLocationSettingsAlert = true
+                return
             }
+            
+            if !permissionsVM.isNotificationAuthorized {
+                permissionsVM.requestNotificationPermission()
+                return
+            }
+            
+            let location = getCurrentLocation()
+            metroVM.startTrip(userLocation: location)
+            
+            if metroVM.isTracking {
+                showSheet = false
+            }
+            
         }) {
             Text("ابدأ الرحلة")
                 .font(.title3.bold())
@@ -114,10 +122,8 @@ private extension StationSheetView {
                 .background(Color.secondGreen)
                 .cornerRadius(25)
                 .glassEffect(.clear.tint(Color.mainGreen))
-
         }
         .padding(.bottom, 15)
-
     }
     
     func stationRow(for station: Station) -> some View {
@@ -133,21 +139,16 @@ private extension StationSheetView {
                         .background(
                             RoundedRectangle(cornerRadius: 12)
                                 .fill(Color.stationGreen1)
-                              
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 12)
-                                        .stroke(
+                                        .fill(
                                             metroVM.selectedDestination?.id == station.id
-                                            ? Color(UIColor { trait in
-                                                trait.userInterfaceStyle == .dark
-                                                ? .white
-                                                : .black
-                                            })
-                                            : Color.clear,
-                                            lineWidth: 5
+                                            ? (colorScheme == .dark
+                                                ? Color.white.opacity(0.4)
+                                                : Color.black.opacity(0.3))
+                                            : Color.clear
                                         )
                                 )
-                                
                         )
                 }
             }

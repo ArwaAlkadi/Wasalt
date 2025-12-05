@@ -9,6 +9,7 @@
 
 import MapKit
 import Combine
+import UserNotifications
 
 
 /*
@@ -41,7 +42,12 @@ final class PermissionsViewModel: NSObject, ObservableObject, CLLocationManagerD
         isLocationAuthorized && isNotificationAuthorized
     }
     
-    //Location
+    func refreshPermissions() {
+        checkLocationAuthorizationStatus()
+        checkNotificationAuthorizationStatus()
+    }
+    
+    // MARK: - Location
     func checkLocationAuthorizationStatus() {
         let status = CLLocationManager.authorizationStatus()
         switch status {
@@ -62,7 +68,7 @@ final class PermissionsViewModel: NSObject, ObservableObject, CLLocationManagerD
         checkLocationAuthorizationStatus()
     }
     
-    // Notifications
+    // MARK: - Notifications
     func checkNotificationAuthorizationStatus() {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             DispatchQueue.main.async {
@@ -83,6 +89,7 @@ final class PermissionsViewModel: NSObject, ObservableObject, CLLocationManagerD
             .requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
                 DispatchQueue.main.async {
                     self.isNotificationAuthorized = granted
+                    
                     if !granted {
                         self.showNotificationSettingsAlert = true
                     }
@@ -97,8 +104,6 @@ final class PermissionsViewModel: NSObject, ObservableObject, CLLocationManagerD
         }
     }
 }
-
-
 
 
 

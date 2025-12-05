@@ -1,10 +1,3 @@
-//
-//  MainView.swift
-//  Wasalt
-//
-//  Created by Rana Alqubaly on 11/06/1447 AH.
-//
-
 import SwiftUI
 import MapKit
 import _MapKit_SwiftUI
@@ -60,7 +53,6 @@ struct MainView: View {
             .ignoresSafeArea()
             
             VStack {
-                // MARK: - البانر الأخضر داخل التطبيق
                 if alertManager.isShowingBanner {
                     bannerView
                         .transition(.move(edge: .top).combined(with: .opacity))
@@ -80,7 +72,6 @@ struct MainView: View {
                         .background(Color.mainGreen)
                         .cornerRadius(25)
                         .glassEffect(.clear.tint(Color.mainGreen))
-
                 }
                 .padding(.bottom, 15)
             }
@@ -102,10 +93,11 @@ struct MainView: View {
         // MARK: - Tracking Sheet
         .sheet(isPresented: $showTrackingSheet) {
             TrackingSheet(
-                isPresented: $showTrackingSheet,
+                ShowStationSheet: $showStationSheet,
+                isPresented: $showArrivalSheet,
                 metroVM: metroVM
             )
-            .presentationDetents([.height(330), .height(330)])
+            .presentationDetents([.height(460), .height(550)])
             .presentationDragIndicator(.hidden)
             .interactiveDismissDisabled(true)
         }
@@ -119,8 +111,8 @@ struct MainView: View {
         
         // MARK: - Logic
         .onAppear {
-            permissionsVM.requestLocationPermission()
-            permissionsVM.requestNotificationPermission()
+            // نحدّث حالة الأذونات مرّة وحدة
+            permissionsVM.refreshPermissions()
             
             locationManager.requestPermission()
             locationManager.start()
@@ -145,7 +137,6 @@ struct MainView: View {
                 alertManager.showApproaching(
                     message: "استعد! قربنا من محطتك \(name)"
                 )
-                
             case .arrival(let name):
                 alertManager.showArrival(
                     message: "وصلت محطتك \(name)!"
@@ -189,9 +180,8 @@ struct MainView: View {
             Spacer()
             
             HStack {
-                
                 Text(alertManager.bannerMessage)
-                    .font(.body.bold())
+                    .font(.subheadline.bold())
                     .foregroundStyle(.whiteBlack)
                 
                 Image(

@@ -1,21 +1,3 @@
-//
-//  MetroTripViewModel.swift
-//  Wasalt
-//
-//  Created by Arwa Alkadi on 19/11/2025.
-//
-
-//
-// MetroTripViewModel
-// يدير كامل منطق رحلة المترو:
-// - اختيار المحطة
-// - بدء التتبع وإيقافه
-// - تحديد أقرب محطة للمستخدم
-// - حساب الوقت المتبقي
-// - إظهار شيت الوصول عند الانتهاء
-// - التعامل مع سيناريوهات "غير قريب من محطة" أو "بدون إذن موقع"
-//
-
 import SwiftUI
 import MapKit
 import AVFoundation
@@ -35,7 +17,6 @@ final class MetroTripViewModel: ObservableObject {
     private let stations: [Station]
     private let notificationManager: LocalNotificationManager
     
-    // حالة الرحلة
     @Published var selectedDestination: Station?
     @Published var isTracking: Bool = false
     @Published var startStation: Station?
@@ -47,9 +28,9 @@ final class MetroTripViewModel: ObservableObject {
     @Published var statusText: String = ""
     @Published var showArrivalSheet: Bool = false
     @Published var activeAlert: MetroAlertType? = nil
+    @Published var upcomingStations: [Station] = []
     
-    let nearStationDistance: CLLocationDistance = 100000.0
-
+    let nearStationDistance: CLLocationDistance = 1000.0
     private let arrivalDistance: CLLocationDistance = 100.0
     
     private enum TripDirection { case forward, backward }
@@ -88,6 +69,7 @@ final class MetroTripViewModel: ObservableObject {
                 stationsRemaining = 0
                 etaMinutes = 0
                 nextStation = nil
+                upcomingStations = []
                 statusText = "أنت بالفعل في محطتك: \(dest.name)"
                 showArrivalSheet = true
                 isTracking = false
@@ -149,6 +131,7 @@ final class MetroTripViewModel: ObservableObject {
             stationsRemaining = 0
             etaMinutes = 0
             nextStation = nil
+            upcomingStations = []
             statusText = "أنت بالفعل في محطتك: \(dest.name)"
             showArrivalSheet = true
             isTracking = false
@@ -157,7 +140,6 @@ final class MetroTripViewModel: ObservableObject {
             return
         }
         
-        // اتجاه الرحلة
         if dest.order > startSt.order {
             tripDirection = .forward
         } else {
@@ -172,7 +154,6 @@ final class MetroTripViewModel: ObservableObject {
         
         updateProgress(for: location)
         
-        // إشعارات باك أب بالوقت (Plan B لو الـ GPS انقطع)
         if etaMinutes > 3 {
             notificationManager.scheduleApproachingNotification(
                 inMinutes: max(etaMinutes - 3, 1),
@@ -187,7 +168,6 @@ final class MetroTripViewModel: ObservableObject {
         }
     }
     
-    // تحديث من الموقع الحقيقي
     func userLocationUpdated(_ location: CLLocation?) {
         guard isTracking, let location = location else { return }
         updateProgress(for: location)
@@ -200,18 +180,18 @@ final class MetroTripViewModel: ObservableObject {
         notificationManager.cancelTripNotifications()
     }
     
-   
     func cancelAndChooseAgain() {
         isTracking = false
-        // نحتفظ بأقرب محطة وآخر محطة
+        
         if let current = currentNearestStation {
             lastPassedStation = current
         }
-        // نفرغ الوجهة فقط
+        
         selectedDestination = nil
         nextStation = nil
         stationsRemaining = 0
         etaMinutes = 0
+        upcomingStations = []
         showArrivalSheet = false
         tripDirection = nil
         didFireApproachingAlert = false
@@ -226,6 +206,42 @@ final class MetroTripViewModel: ObservableObject {
         activeAlert = nil
     }
     
+    var middleStations: [Station] {
+        guard
+            let start = startStation,
+            let dest  = selectedDestination
+        else { return [] }
+        
+        if dest.order > start.order {
+            return stations
+                .filter { $0.order > start.order && $0.order < dest.order }
+                .sorted { $0.order < $1.order }
+        } else if dest.order < start.order {
+            return stations
+                .filter { $0.order < start.order && $0.order > dest.order }
+                .sorted { $0.order > $1.order }
+        } else {
+            return []
+        }
+    }
+    
+    func isStationReached(_ station: Station) -> Bool {
+        guard let direction = tripDirection else { return false }
+        
+        let refOrder: Int? =
+            lastPassedStation?.order ??
+            currentNearestStation?.order ??
+            startStation?.order
+        
+        guard let currentOrder = refOrder else { return false }
+        
+        switch direction {
+        case .forward:
+            return station.order <= currentOrder
+        case .backward:
+            return station.order >= currentOrder
+        }
+    }
     
     private func updateProgress(for location: CLLocation) {
         guard let dest = selectedDestination,
@@ -241,6 +257,8 @@ final class MetroTripViewModel: ObservableObject {
         etaMinutes = result.minutes
         nextStation = result.next
         
+        upcomingStations = computeUpcomingStations(from: nearest, to: dest)
+        
         let destLocation = CLLocation(latitude: dest.coordinate.latitude,
                                       longitude: dest.coordinate.longitude)
         let distanceToDest = destLocation.distance(from: location)
@@ -249,6 +267,7 @@ final class MetroTripViewModel: ObservableObject {
             statusText = "وصلت إلى محطتك: \(dest.name)"
             isTracking = false
             showArrivalSheet = true
+            upcomingStations = []
             
             if !didFireArrivalAlert {
                 activeAlert = .arrival(stationName: dest.name)
@@ -331,6 +350,24 @@ final class MetroTripViewModel: ObservableObject {
         return (count, totalMinutes, next)
     }
     
+    private func computeUpcomingStations(from current: Station, to dest: Station) -> [Station] {
+        guard let direction = tripDirection else { return [] }
+        
+        switch direction {
+        case .forward:
+            guard current.order < dest.order else { return [] }
+            return stations
+                .filter { $0.order > current.order && $0.order <= dest.order }
+                .sorted { $0.order < $1.order }
+            
+        case .backward:
+            guard current.order > dest.order else { return [] }
+            return stations
+                .filter { $0.order < current.order && $0.order >= dest.order }
+                .sorted { $0.order > $1.order }
+        }
+    }
+    
     private func nearestStation(to location: CLLocation) -> Station? {
         stations.min { lhs, rhs in
             let lhsLoc = CLLocation(latitude: lhs.coordinate.latitude,
@@ -362,6 +399,7 @@ final class MetroTripViewModel: ObservableObject {
         nextStation = nil
         stationsRemaining = 0
         etaMinutes = 0
+        upcomingStations = []
         showArrivalSheet = false
         tripDirection = nil
         didFireApproachingAlert = false
@@ -392,19 +430,20 @@ final class MetroTripViewModel: ObservableObject {
 final class InAppAlertManager: ObservableObject {
     @Published var isShowingBanner: Bool = false
     @Published var bannerMessage: String = ""
-    @Published var isArrival: Bool = false   // false = Approaching, true = Arrival
-    
+    @Published var isArrival: Bool = false         
+
     private var flashTimer: Timer?
     private var isTorchOn: Bool = false
     private var isPatternRunning: Bool = false
-    
-    /// أقصى مدة نشغّل فيها النمط قبل ما نوقفه تلقائياً (فلاش + اهتزاز) – 15 ثانية
+
+    /// مدة تشغيل الفلاش + الاهتزاز (15 ثانية)
     private let maxPatternDuration: TimeInterval = 15
-    /// مدة بقاء البانر على الشاشة قبل ما يختفي تلقائياً – 5 دقائق
-    private let bannerAutoDismiss: TimeInterval = 5 * 60
-    
-    // MARK: - Public API
-    
+
+    /// مدة بقاء البانر على الشاشة قبل إخفائه تلقائياً (60 ثانية)
+    private let bannerAutoDismiss: TimeInterval = 60
+
+    // MARK: - Public API (يستعملها الـ ViewModel)
+
     func showApproaching(message: String) {
         bannerMessage = message
         isArrival = false
@@ -423,23 +462,22 @@ final class InAppAlertManager: ObservableObject {
         stopPatternVibrationAndFlash()
     }
     
-    // MARK: - Private helpers
+    // MARK: - Private Helpers
     
     private func showBanner() {
         isShowingBanner = true
         startPatternVibrationAndFlash()
         
-        // إخفاء البانر تلقائياً بعد 5 دقائق إذا ما قفله المستخدم
+        // إخفاء البانر تلقائياً بعد مدة
         DispatchQueue.main.asyncAfter(deadline: .now() + bannerAutoDismiss) { [weak self] in
             guard let self = self, self.isShowingBanner else { return }
             self.dismiss()
         }
     }
     
-    // النمط (اهتزاز + فلاش)
-    /// يبدأ نمط متكرر: كل 0.35 ثانية → يهز ويقلب وضع الفلاش
+    /// تشغيل نمط الاهتزاز + الفلاش كل 0.35 ثانية
     private func startPatternVibrationAndFlash() {
-        stopPatternVibrationAndFlash()
+        stopPatternVibrationAndFlash()  // إلغاء أي نمط سابق
         isPatternRunning = true
         
         flashTimer = Timer.scheduledTimer(withTimeInterval: 0.35, repeats: true) { [weak self] _ in
@@ -448,13 +486,13 @@ final class InAppAlertManager: ObservableObject {
             self.toggleTorch()
         }
         
-        // إيقاف تلقائي بعد maxPatternDuration ثواني
+        // إيقاف النمط بعد 15 ثانية
         DispatchQueue.main.asyncAfter(deadline: .now() + maxPatternDuration) { [weak self] in
             self?.stopPatternVibrationAndFlash()
         }
     }
     
-    /// يوقف النمط ويطفئ الفلاش
+    /// إطفاء الفلاش + إيقاف الاهتزاز
     private func stopPatternVibrationAndFlash() {
         isPatternRunning = false
         flashTimer?.invalidate()
@@ -462,24 +500,24 @@ final class InAppAlertManager: ObservableObject {
         setTorch(on: false)
     }
     
-    /// هزّة واحدة
+    /// هزة واحدة
     private func vibrateOnce() {
         AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
     }
     
-    /// قلب حالة الفلاش (تشغيل/إطفاء)
+    /// تشغيل/إيقاف الفلاش
     private func toggleTorch() {
         isTorchOn.toggle()
         setTorch(on: isTorchOn)
     }
     
-    /// تشغيل/إطفاء فلاش الكاميرا الخلفية
+    /// التحكم بالفلاش الحقيقي
     private func setTorch(on: Bool) {
-        // في السيميوليتر ما فيه كاميرا، فـ guard يحمي من المشاكل
         guard let device = AVCaptureDevice.default(.builtInWideAngleCamera,
                                                    for: .video,
                                                    position: .back),
               device.hasTorch else { return }
+        
         do {
             try device.lockForConfiguration()
             if on {
@@ -489,7 +527,7 @@ final class InAppAlertManager: ObservableObject {
             }
             device.unlockForConfiguration()
         } catch {
-            print("Torch error:", error.localizedDescription)
+            print("Torch Error:", error.localizedDescription)
         }
     }
 }
@@ -498,4 +536,3 @@ enum MetroAlertType: Equatable {
     case approaching(stationName: String, etaMinutes: Int)
     case arrival(stationName: String)
 }
-

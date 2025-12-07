@@ -6,7 +6,7 @@ struct OnboardingView: View {
 
     var body: some View {
         Group {
-            if false {
+            if viewModel.isOnboardingFinished {
                 MainView()
                     .transition(.opacity)
             } else {
@@ -87,11 +87,12 @@ struct OnboardingView: View {
                                 Button("ابدأ") {
                                     viewModel.next()
                                 }
-                                .frame(width: 150, height: 50) // ← ارتفاع ثابت يمنع تحريك أي عناصر
+                                .frame(width: 150, height: 47) // ← ارتفاع ثابت يمنع تحريك أي عناصر
                                 .background(Color(colorScheme == .light ? "GL" : "GD"))
-                                .foregroundColor(.white)
+                                .foregroundColor(colorScheme == .light ? .white : .black)
+                                .fontWeight(.bold)
                                 .cornerRadius(25)
-                                .padding(.trailing, 119)
+                                .padding(.trailing, 120)
                                 
                             } else {
                                 Button(action: {
@@ -121,3 +122,4 @@ struct OnboardingView: View {
     OnboardingView()
    // SplashView()
 }
+//viewModel.isOnboardingFinished

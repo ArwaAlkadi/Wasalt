@@ -33,7 +33,7 @@ struct OnboardingView: View {
                                     Circle()
                                         .frame(width: 290, height: 290)
                                         .foregroundColor(.secondGreen)
-                                        .opacity(0.1)
+                                        .opacity(0.2)
                                     
                                     Image(iconName)
                                         .resizable()
@@ -84,7 +84,6 @@ struct OnboardingView: View {
                                 Image(systemName: "chevron.right.circle.fill")
                                     .font(.system(size: 40))
                                     .foregroundColor(.mainGreen)
-
                                     .padding(.trailing, 20)
                                 
                             }

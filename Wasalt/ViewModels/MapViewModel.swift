@@ -12,6 +12,15 @@ import CoreLocation
 import _MapKit_SwiftUI
 import Combine
 
+
+/*
+ 🔴 File Contents | محتوى الكود
+     •    MapViewModel → Manages the map view, metro stations, and route polylines.
+     •    LocationManager → continuously tracks the user’s real GPS location.
+ */
+
+
+//MARK: - MapViewModel → Manages the map view, metro stations, and route polylines.
 class MapViewModel: ObservableObject {
 
     @Published var mapCamera = MapCameraPosition.region(
@@ -22,15 +31,15 @@ class MapViewModel: ObservableObject {
     )
 
     @Published var stations: [Station] = [
-        Station(name: "KAFD",order:8 , coordinate: .init(latitude: 24.76571265, longitude: 46.63858725), minutesToNext: 5),
-        Station(name: "Ar Rabi",order:7 , coordinate: .init(latitude: 24.78634, longitude: 46.66026),minutesToNext: 5),
-        Station(name: "Uthman Bin Affan",order:6 , coordinate: .init(latitude: 24.80144, longitude: 46.69604),minutesToNext: 4),
-        Station(name: "SABIC",order:5 , coordinate: .init(latitude: 24.80712, longitude: 46.70935),minutesToNext: 3),
-        Station(name: "PNU",order:4 , coordinate: .init(latitude: 24.84600, longitude: 46.72000),minutesToNext: 6),
-        Station(name: "PNU 2",order:3 , coordinate: .init(latitude: 24.85968, longitude: 46.70442),minutesToNext: 3),
-        Station(name: "Airport T5",order:2 , coordinate: .init(latitude: 24.94262, longitude: 46.71212),minutesToNext: 11),
-        Station(name: "Airport T3–4",order:1 , coordinate: .init(latitude: 24.95579, longitude: 46.70236),minutesToNext: 3),
-        Station(name: "Airport T1–2",order:0 , coordinate: .init(latitude: 24.95820, longitude: 46.70078),minutesToNext: 3)
+        Station(name: "station.kafd".localized,        order: 8, coordinate: .init(latitude: 24.7671553, longitude: 46.6432711), minutesToNext: 5),
+        Station(name: "station.ar_rabi".localized,     order: 7, coordinate: .init(latitude: 24.7862360, longitude: 46.6601248), minutesToNext: 5),
+        Station(name: "station.uthman_bin_affan".localized, order: 6, coordinate: .init(latitude: 24.8013955, longitude: 46.6961421), minutesToNext: 4),
+        Station(name: "station.sabic".localized,       order: 5, coordinate: .init(latitude: 24.8070691, longitude: 46.7095294), minutesToNext: 3),
+        Station(name: "station.pnu1".localized,        order: 4, coordinate: .init(latitude: 24.8414744, longitude: 46.7174164), minutesToNext: 6),
+        Station(name: "station.pnu2".localized,        order: 3, coordinate: .init(latitude: 24.8596218, longitude: 46.7045103), minutesToNext: 3),
+        Station(name: "station.airport_t5".localized,  order: 2, coordinate: .init(latitude: 24.9407856, longitude: 46.7102385), minutesToNext: 11),
+        Station(name: "station.airport_t3_4".localized, order: 1, coordinate: .init(latitude: 24.9560402, longitude: 46.7021429), minutesToNext: 3),
+        Station(name: "station.airport_t1_2".localized, order: 0, coordinate: .init(latitude: 24.9609970, longitude: 46.6989819), minutesToNext: 3)
     ]
 
     // All lines
@@ -43,7 +52,7 @@ class MapViewModel: ObservableObject {
         loadBundledMetroGeoJSON()
     }
 
-    // MARK: - Load GeoJSON
+    // MARK: Load GeoJSON
     func loadBundledMetroGeoJSON() {
         guard let url = Bundle.main.url(forResource: "metro_lines", withExtension: "geojson"),
               let data = try? Data(contentsOf: url) else { return }
@@ -77,7 +86,7 @@ class MapViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Convert MKPolyline to smooth points
+    // MARK: Convert MKPolyline to smooth points
     private func convertPolylineToPoints(_ polyline: MKPolyline) -> [MKMapPoint] {
         var pts: [MKMapPoint] = []
         let p = polyline.points()
@@ -128,7 +137,7 @@ class MapViewModel: ObservableObject {
 
 
 
-    // MARK: - Linear interpolation
+    // MARK: Linear interpolation
     func interpolatePolyline(_ points: [MKMapPoint], step: Double = 100) -> [MKMapPoint] {
         var smoothPoints: [MKMapPoint] = []
         for i in 0..<points.count-1 {
@@ -149,7 +158,7 @@ class MapViewModel: ObservableObject {
         return smoothPoints
     }
 
-    // MARK: - Catmull-Rom spline for smooth curves
+    // MARK: Catmull-Rom spline for smooth curves
     func catmullRomSpline(points: [MKMapPoint], samples: Int = 10) -> [MKMapPoint] {
         guard points.count > 3 else { return points }
         var result: [MKMapPoint] = []
@@ -213,3 +222,58 @@ class MapViewModel: ObservableObject {
           return times
       }
   }
+
+
+
+
+
+
+
+
+
+
+
+
+//MARK: - LocationManager → continuously tracks the user’s real GPS location.
+final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
+    private let manager = CLLocationManager()
+    
+    @Published var userLocation: CLLocation?
+    
+    override init() {
+        super.init()
+        manager.delegate = self
+        manager.desiredAccuracy = kCLLocationAccuracyBest
+        
+        if let modes = Bundle.main.object(forInfoDictionaryKey: "UIBackgroundModes") as? [String],
+           modes.contains("location") {
+            manager.allowsBackgroundLocationUpdates = true
+            manager.pausesLocationUpdatesAutomatically = false
+        }
+    }
+    
+    func requestPermission() {
+        manager.requestWhenInUseAuthorization()
+    }
+    
+    func start() {
+        manager.startUpdatingLocation()
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        switch status {
+        case .authorizedWhenInUse, .authorizedAlways:
+            manager.startUpdatingLocation()
+        default:
+            break
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        userLocation = locations.last
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("Location error:", error.localizedDescription)
+    }
+}

@@ -21,27 +21,26 @@ struct ArrivedSheet: View {
             
             VStack(spacing: 10) {
                 
-                Button {
-                    isPresented = false
-                } label: {
-                    HStack {
-                        
+                Spacer()
+                
+                HStack {
+                    Spacer()
+                    Button {
+                        isPresented = false
+                    } label: {
                         ZStack {
                             Circle()
-                                .foregroundStyle(.mainGreen.opacity(0.5))//
-                                .frame(width:30, height: 30)
+                                .foregroundStyle(.mainGreen.opacity(0.5))
+                                .frame(width: 30, height: 30)
                                 .glassEffect(.clear.tint(Color.secondGreen))
-
                             
                             Image(systemName: "xmark")
                                 .foregroundStyle(.whiteBlack)
                                 .font(.title3)
                         }
                     }
-                    .padding()
-                    
-                    Spacer()
                 }
+                .padding()
                 
                 ZStack {
                     Circle()
@@ -55,25 +54,25 @@ struct ArrivedSheet: View {
                         .frame(width: 120)
                 }
                 
-                Text("وصلت محطتك!")
+                Text("arrival.title".localized)
                     .font(.title.bold())
                     .padding()
                 
                 Button(action: {
                     isPresented = false
                 }) {
-                    Text("العودة")
+                    Text("arrival.back".localized)
                         .font(.title3.bold())
                         .foregroundColor(.white)
                         .frame(width: 200, height: 25)
                         .padding(.vertical, 15)
                         .background(Color.secondGreen)
-                        .glassEffect(.clear)
-                    
+                        .glassEffect(.clear.tint(.secondGreen))
                         .cornerRadius(25)
                 }
                 .padding(.bottom, 35)
                 
+                Spacer()
             }
             .padding(.horizontal)
             .frame(maxWidth: .infinity)
@@ -81,7 +80,7 @@ struct ArrivedSheet: View {
     }
 }
 
-// Preview helper
+
 #Preview {
     StatefulPreviewWrapper(false) { value in
         ArrivedSheet(isPresented: value)
@@ -101,4 +100,3 @@ struct StatefulPreviewWrapper<Value, Content: View>: View {
         content($value)
     }
 }
-

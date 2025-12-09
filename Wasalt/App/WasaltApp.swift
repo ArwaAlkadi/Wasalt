@@ -1,4 +1,5 @@
 import SwiftUI
+import Foundation
 
 @main
 struct WasaltApp: App {
@@ -6,5 +7,13 @@ struct WasaltApp: App {
         WindowGroup {
             RootAppView()
         }
+    }
+}
+
+
+// تحويل اللغة
+extension String {
+    var localized: String {
+        NSLocalizedString(self, comment: "")
     }
 }

@@ -12,21 +12,29 @@ class OnboardingViewModel: ObservableObject {
 
     @Published var currentPage: Int = 0
     
-    // نحفظ قيمة الانتهاء من الأونبوردنق
     @AppStorage("didFinishOnboarding") var isOnboardingFinished: Bool = false
 
     let pages: [OnboardingPage1] = [
-        .init(lightIcon: "Train", darkIcon: "Train Dark",
-              title: "تنقّل آمن",
-              subtitle: "نسهل تنقّلك داخل المترو بخطوات بسيطة!"),
+        .init(
+            lightIcon: "Train",
+            darkIcon: "Train Dark",
+            title: "onboarding.title1".localized,
+            subtitle: "onboarding.subtitle1".localized
+        ),
         
-        .init(lightIcon: "phone", darkIcon: "Phone Dark",
-              title: "تنبيهات ذكية",
-              subtitle: "ننبّهك بالاهتزاز والومض عند الاقتراب من محطتك"),
+        .init(
+            lightIcon: "phone",
+            darkIcon: "Phone Dark",
+            title: "onboarding.title2".localized,
+            subtitle: "onboarding.subtitle2".localized
+        ),
         
-        .init(lightIcon: "Map", darkIcon: "Map Dark",
-              title: "ابدأ رحلتك بثقة",
-              subtitle: "اختر وجهتك، واترك التطبيق يتابع خط سير المترو")
+        .init(
+            lightIcon: "Map",
+            darkIcon: "Map Dark",
+            title: "onboarding.title3".localized,
+            subtitle: "onboarding.subtitle3".localized
+        )
     ]
 
     func next() {

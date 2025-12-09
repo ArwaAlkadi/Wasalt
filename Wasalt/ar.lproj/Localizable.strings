@@ -1,0 +1,70 @@
+/* 
+  Localizable.strings
+  Wasalt
+
+  Created by Arwa Alkadi on 08/12/2025.
+  
+*/
+
+/* Stations */
+"station.kafd" = "المركز المالي - كافد";
+"station.ar_rabi" = "الربيع";
+"station.uthman_bin_affan" = "عثمان بن عفان";
+"station.sabic" = "سابك";
+"station.pnu1" = "جامعة الأميرة نورة 1";
+"station.pnu2" = "جامعة الأميرة نورة 2";
+"station.airport_t5" = "الصالة 5";
+"station.airport_t3_4" = "الصالة 3-4";
+"station.airport_t1_2" = "الصالة 1-2";
+
+/* General */
+"ok" = "حسناً";
+"cancel" = "إلغاء";
+
+/* Onboarding */
+"onboarding.skip" = "تخطي";
+"onboarding.next" = "التالي";
+"onboarding.done" = "ابدأ!";
+"onboarding.title1" = "تنقّل آمن";
+"onboarding.subtitle1" = "نسهّل عليك رحلاتك داخل المترو بخطوات بسيطة!";
+"onboarding.title2" = "تنبيهات ذكية";
+"onboarding.subtitle2" = "ننبهك بالاهتزاز والوميض عند الاقتراب من محطتك.";
+"onboarding.title3" = "ابدأ رحلتك بثقة";
+"onboarding.subtitle3" = "اختر وجهتك ودع التطبيق يتابع خط سير المترو عنك.";
+
+/* Main Screen */
+"main.chooseDestination" = "اختر محطتك";
+"main.enableLocationAlert" = "فضلاً فعّل الموقع قبل بدء الرحلة.";
+"main.enableNotificationsAlert" = "فعّل الإشعارات حتى نتمكن من تنبيهك عند الوصول.";
+
+/* Station Sheet */
+"sheet.header" = "أهلاً! 👋🏼 وين ودك تروح؟";
+"sheet.startTrip" = "ابدأ الرحلة";
+"sheet.status.notNearMetro" = "قرب من خط المترو عشان تقدر تبدأ.";
+"sheet.status.noLocation" = "ما نقدر نبدأ: موقعك غير معروف.";
+"sheet.status.chooseDestination" = "اختر محطتك أولاً.";
+"trip.status.alreadyAtDestination" = "أنت بالفعل في محطتك: %@";
+
+/* Tracking Sheet */
+"tracking.eta" = "الوقت المتوقع للوصول: %@ دقيقة";
+"tracking.start" = "البداية";
+"tracking.destination" = "الوجهة";
+"tracking.change" = "بغير محطتي";
+"tracking.endTrip" = "إنهاء الرحلة";
+
+/* Arrival Sheet */
+"arrival.title" = "وصلت محطتك!";
+"arrival.back" = "رجوع";
+
+/* Alerts (in-app banner) */
+"alert.approaching" = "استعد! قربنا من %@";
+"alert.arrived" = "وصلت إلى %@";
+
+/* Permission Alerts */
+"permission.location.title" = "فعّل الموقع";
+"permission.location.message" = "التطبيق يحتاج إذن الوصول للموقع لمتابعة رحلتك.";
+"permission.notifications.title" = "فعّل الإشعارات";
+"permission.notifications.message" = "فعّل الإشعارات حتى نقدر ننبهك عند الوصول.";
+
+/* General Errors */
+"error.unknown" = "حدث خطأ غير متوقع. حاول مرة أخرى.";

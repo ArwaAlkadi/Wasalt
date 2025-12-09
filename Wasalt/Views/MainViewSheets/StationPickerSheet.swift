@@ -1,11 +1,9 @@
-
 //
 //  StationSheetView.swift
 //  Wasalt
 //
 //  Created by Arwa Alkadi on 02/12/2025.
 //
-
 
 import SwiftUI
 import CoreLocation
@@ -25,152 +23,140 @@ struct StationSheetView: View {
     var body: some View {
         VStack {
             VStack(spacing: metroVM.statusText.isEmpty ? 20 : 7) {
-                headerSection
                 
+                Text("sheet.header".localized)
+                    .font(.title2.bold())
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.top, 20)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                
+                // MARK: Status
                 if !metroVM.statusText.isEmpty {
-                    statusSection
+                    HStack(spacing: 3) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.body.bold())
+                            .foregroundColor(.red1)
+                        Text(metroVM.statusText)
+                            .font(.subheadline.bold())
+                            .foregroundColor(.red1)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 10)
+                    .padding(.bottom, 10)
                 }
                 
-                stationsListSection
+                // MARK: Stations
+                ZStack {
+                    ScrollView(showsIndicators: false) {
+                        ZStack(alignment: .leading) {
+                            
+                            Rectangle()
+                                .fill(Color.yellow)
+                                .frame(width: 3)
+                                .padding(.leading, 33)
+                            
+                            VStack(spacing: 16) {
+                                ForEach(stations) { station in
+                                    stationRow(for: station)
+                                }
+                            }
+                        }
+                    }
+                }
                 
-                startButtonSection
+                // MARK: Button
+                Button(action: {
+                    
+                    permissionsVM.refreshPermissions()
+                    
+                    if !permissionsVM.isLocationAuthorized {
+                        permissionsVM.requestLocationPermission()
+                        permissionsVM.showLocationSettingsAlert = true
+                        return
+                    }
+                    
+                    if !permissionsVM.isNotificationAuthorized {
+                        permissionsVM.requestNotificationPermission()
+                        return
+                    }
+                    
+                    let location = getCurrentLocation()
+                    metroVM.startTrip(userLocation: location)
+                    
+                    if metroVM.isTracking {
+                        showSheet = false
+                    }
+                    
+                }) {
+                    Text("sheet.startTrip".localized)
+                        .font(.title3.bold())
+                        .foregroundColor(.white)
+                        .frame(width: 200, height: 29)
+                        .padding(.vertical, 15)
+                        .background(
+                                    metroVM.selectedDestination == nil
+                                    ? Color.clear
+                                    : Color.secondGreen
+                                )
+                        .cornerRadius(25)
+                        .glassEffect(.clear.tint(.black.opacity(0.2)))
+                }
+                .padding(.bottom, 20)
+                
             }
             .padding(.horizontal, 16)
             .background(Color.stationGreen2)
             .cornerRadius(20)
         }
         .ignoresSafeArea(edges: .bottom)
-    }
-}
-
-// MARK: - Sections
-private extension StationSheetView {
-    
-    var headerSection: some View {
-        Text("أهلاً! 👋🏼 وين ودك تروح؟")
-            .font(.title2.bold())
-            .foregroundColor(.white)
-            .padding(.horizontal, 30)
-            .padding(.top, 20)
-            .frame(maxWidth: .infinity, alignment: .trailing)
+       
     }
     
-    var statusSection: some View {
-        HStack (spacing: 3) {
-            Text(metroVM.statusText)
-                .font(.subheadline)
-                .foregroundColor(.yellow)
-            
-            Image(systemName: "exclamationmark.triangle")
-                .font(.body)
-                .foregroundColor(.yellow)
-        }
-        .frame(maxWidth: .infinity, alignment: .trailing)
-        .padding(.horizontal, 30)
-        .padding(.bottom, 10)
-    }
     
-    var stationsListSection: some View {
-        ZStack {
-            ScrollView(showsIndicators: false) {
-                ZStack(alignment: .trailing) {
-                    
-                    Rectangle()
-                        .fill(Color.yellow)
-                        .frame(width: 3)
-                        .padding(.trailing, 33)
-                    
-                    VStack(spacing: 16) {
-                        ForEach(stations) { station in
-                            stationRow(for: station)
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    var startButtonSection: some View {
-        Button(action: {
-            
-            permissionsVM.refreshPermissions()
-            
-            if !permissionsVM.isLocationAuthorized {
-                permissionsVM.requestLocationPermission()
-                permissionsVM.showLocationSettingsAlert = true
-                return
-            }
-            
-            if !permissionsVM.isNotificationAuthorized {
-                permissionsVM.requestNotificationPermission()
-                return
-            }
-            
-            let location = getCurrentLocation()
-            metroVM.startTrip(userLocation: location)
-            
-            if metroVM.isTracking {
-                showSheet = false
-            }
-            
-        }) {
-            Text("ابدأ الرحلة")
-                .font(.title3.bold())
-                .foregroundColor(.white)
-                .frame(width: 200, height: 25)
-                .padding(.vertical, 15)
-                .background(Color.secondGreen)
-                .cornerRadius(25)
-                .glassEffect(.clear.tint(Color.mainGreen))
-        }
-        .padding(.bottom, 15)
-    }
-    
+    // MARK: - Station Row
     func stationRow(for station: Station) -> some View {
         ZStack {
             HStack(alignment: .center, spacing: 8) {
-                ZStack(alignment: .leading) {
-                    Text(station.name)
-                        .font(.body)
-                        .foregroundColor(.black)
-                        .frame(width: 300, height: 35, alignment: .trailing)
-                        .padding(.vertical, 15)
-                        .padding(.trailing, 60)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.stationGreen1)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .fill(
-                                            metroVM.selectedDestination?.id == station.id
-                                            ? (colorScheme == .dark
-                                                ? Color.white.opacity(0.4)
-                                                : Color.black.opacity(0.3))
-                                            : Color.clear
-                                        )
-                                )
-                        )
-                }
+                Text(station.name)
+                    .font(.body)
+                    .foregroundColor(.black)
+                    .frame(width: 310, height: 40, alignment: .leading)
+                    .padding(.vertical, 15)
+                    .padding(.leading, 60)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.stationGreen1)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(
+                                        metroVM.selectedDestination?.id == station.id
+                                        ? (colorScheme == .dark
+                                            ? Color.white.opacity(0.4)
+                                            : Color.black.opacity(0.3))
+                                        : Color.clear
+                                    )
+                            )
+                    )
+                    .contentShape(Rectangle())
+                    .onTapGesture { metroVM.selectDestination(station) }
             }
-            .contentShape(Rectangle())
-            .onTapGesture {
-                metroVM.selectDestination(station)
-            }
+            .frame(maxWidth: .infinity, alignment: .leading)
             
             Rectangle()
                 .fill(Color.yellow)
                 .frame(width: 3)
-                .padding(.leading, 290)
+                .padding(.trailing, 300)
             
             Circle()
                 .fill(Color.yellow)
                 .frame(width: 20, height: 20)
-                .padding(.leading, 290)
+                .padding(.trailing, 300)
             
             Circle()
                 .fill(Color.white)
                 .frame(width: 8, height: 8)
-                .padding(.leading, 290)
+                .padding(.trailing, 300)
         }
     }
 }
@@ -185,4 +171,3 @@ private extension StationSheetView {
         )
     }
 }
-

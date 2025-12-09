@@ -64,10 +64,10 @@ struct MainView: View {
                 Button(action: {
                     showStationSheet = true
                 }) {
-                    Text("اختر وجهتك")
+                    Text("main.chooseDestination".localized)
                         .font(.title3.bold())
                         .foregroundColor(Color.whiteBlack)
-                        .frame(width: 200, height: 25)
+                        .frame(width: 220, height: 25)
                         .padding(.vertical, 15)
                         .background(Color.mainGreen)
                         .cornerRadius(25)
@@ -111,9 +111,8 @@ struct MainView: View {
         
         // MARK: - Logic
         .onAppear {
-            // نحدّث حالة الأذونات مرّة وحدة
+
             permissionsVM.refreshPermissions()
-            
             locationManager.requestPermission()
             locationManager.start()
         }
@@ -134,13 +133,18 @@ struct MainView: View {
             
             switch alert {
             case .approaching(let name, _):
-                alertManager.showApproaching(
-                    message: "استعد! قربنا من محطتك \(name)"
+                let message = String(
+                    format: "alert.approaching".localized,
+                    name
                 )
+                alertManager.showApproaching(message: message)
+                
             case .arrival(let name):
-                alertManager.showArrival(
-                    message: "وصلت محطتك \(name)!"
+                let message = String(
+                    format: "alert.arrived".localized,
+                    name
                 )
+                alertManager.showArrival(message: message)
             }
             
             DispatchQueue.main.async {
@@ -148,42 +152,31 @@ struct MainView: View {
             }
         }
         // Alerts
-        .alert("فعّل الموقع", isPresented: $permissionsVM.showLocationSettingsAlert) {
-            Button("فتح الإعدادات") {
+        .alert("permission.location.title".localized,
+               isPresented: $permissionsVM.showLocationSettingsAlert) {
+            Button("permission.openSettings".localized) {
                 permissionsVM.openAppSettings()
             }
-            Button("إلغاء", role: .cancel) { }
+            Button("cancel".localized, role: .cancel) { }
         } message: {
-            Text("نحتاج منك إذن الوصول للموقع قبل تبدأ الرحلة.")
+            Text("permission.location.message".localized)
         }
-        .alert("فعّل الإشعارات", isPresented: $permissionsVM.showNotificationSettingsAlert) {
-            Button("فتح الإعدادات") {
+        .alert("permission.notifications.title".localized,
+               isPresented: $permissionsVM.showNotificationSettingsAlert) {
+            Button("permission.openSettings".localized) {
                 permissionsVM.openAppSettings()
             }
-            Button("إلغاء", role: .cancel) { }
+            Button("cancel".localized, role: .cancel) { }
         } message: {
-            Text("فعّل الإشعارات عشان ننبهك عند الوصول.")
+            Text("permission.notifications.message".localized)
         }
     }
     
     // MARK: - Banner View
     private var bannerView: some View {
         HStack {
-            Button {
-                alertManager.dismiss()
-            } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.title3)
-                    .foregroundStyle(.whiteBlack)
-            }
-            
-            Spacer()
             
             HStack {
-                Text(alertManager.bannerMessage)
-                    .font(.subheadline.bold())
-                    .foregroundStyle(.whiteBlack)
-                
                 Image(
                     alertManager.isArrival
                     ? (scheme == .dark ? "ArrivedDark" : "ArrivedLight")
@@ -192,7 +185,22 @@ struct MainView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 25, height: 25)
+                
+                Text(alertManager.bannerMessage)
+                    .font(.subheadline.bold())
+                    .foregroundStyle(.whiteBlack)
             }
+            
+            Spacer()
+
+            Button {
+                alertManager.dismiss()
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.title3)
+                    .foregroundStyle(.whiteBlack)
+            }
+            
         }
         .frame(width: 350, height: 60)
         .padding()

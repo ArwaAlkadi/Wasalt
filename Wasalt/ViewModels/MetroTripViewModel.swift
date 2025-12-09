@@ -8,6 +8,7 @@ import Combine
  🔴 File Contents | محتوى الكود
      •    MetroTripViewModel → handles trip flow, ETA updates, and arrival logic.
      •    InAppAlertManager → manages in-app alerts (banner + vibration + flash).
+     •    LocalNotificationManager → sends local notifications (arrival/approaching + backup timers).
  */
 
 
@@ -30,8 +31,8 @@ final class MetroTripViewModel: ObservableObject {
     @Published var activeAlert: MetroAlertType? = nil
     @Published var upcomingStations: [Station] = []
     
-    let nearStationDistance: CLLocationDistance = 1000.0
-    private let arrivalDistance: CLLocationDistance = 100.0
+    let nearStationDistance: CLLocationDistance = 500000.0                                                          //Here
+    private let arrivalDistance: CLLocationDistance = 10.0
     
     private enum TripDirection { case forward, backward }
     private var tripDirection: TripDirection?
@@ -53,13 +54,13 @@ final class MetroTripViewModel: ObservableObject {
     
     func startTrip(userLocation: CLLocation?) {
         guard let dest = selectedDestination else {
-            statusText = "اختر محطتك أولاً."
+            statusText = "sheet.status.chooseDestination".localized
             return
         }
         
         if isChangingDestination {
             guard let baseStation = lastPassedStation ?? startStation else {
-                statusText = "ما قدرنا نعرف آخر محطة ركبت منها."
+                statusText = "error.unknown".localized
                 return
             }
             startStation = baseStation
@@ -70,7 +71,10 @@ final class MetroTripViewModel: ObservableObject {
                 etaMinutes = 0
                 nextStation = nil
                 upcomingStations = []
-                statusText = "أنت بالفعل في محطتك: \(dest.name)"
+                statusText = String(
+                    format: "alert.arrived".localized,
+                    dest.name
+                )
                 showArrivalSheet = true
                 isTracking = false
                 activeAlert = .arrival(stationName: dest.name)
@@ -111,15 +115,15 @@ final class MetroTripViewModel: ObservableObject {
         }
         
         guard let location = userLocation else {
-            statusText = "ماتقدر تبدأ: موقعك غير معروف."
+            statusText = "sheet.status.noLocation".localized
             return
         }
         guard isUserNearAnyStation(userLocation: location) else {
-            statusText = "قرب من أي محطة عشان تقدر تبدأ الرحلة."
+            statusText = "sheet.status.notNearMetro".localized
             return
         }
         guard let startSt = nearestStation(to: location) else {
-            statusText = "ما قدرنا نحدد أقرب محطة."
+            statusText = "error.unknown".localized
             return
         }
         
@@ -132,7 +136,10 @@ final class MetroTripViewModel: ObservableObject {
             etaMinutes = 0
             nextStation = nil
             upcomingStations = []
-            statusText = "أنت بالفعل في محطتك: \(dest.name)"
+            statusText = String(
+                format: "trip.status.alreadyAtDestination".localized,
+                  dest.name
+            )
             showArrivalSheet = true
             isTracking = false
             activeAlert = .arrival(stationName: dest.name)
@@ -264,7 +271,10 @@ final class MetroTripViewModel: ObservableObject {
         let distanceToDest = destLocation.distance(from: location)
         
         if distanceToDest <= arrivalDistance {
-            statusText = "وصلت إلى محطتك: \(dest.name)"
+            statusText = String(
+                format: "alert.arrived".localized,
+                dest.name
+            )
             isTracking = false
             showArrivalSheet = true
             upcomingStations = []
@@ -418,32 +428,24 @@ final class MetroTripViewModel: ObservableObject {
 
 
 
-
-
-
-
-
-
-
-
 // MARK:  -InAppAlertManager → manages in-app alerts (banner + vibration + flash).
 final class InAppAlertManager: ObservableObject {
     @Published var isShowingBanner: Bool = false
     @Published var bannerMessage: String = ""
-    @Published var isArrival: Bool = false         
+    @Published var isArrival: Bool = false
 
     private var flashTimer: Timer?
     private var isTorchOn: Bool = false
     private var isPatternRunning: Bool = false
 
     /// مدة تشغيل الفلاش + الاهتزاز (15 ثانية)
-    private let maxPatternDuration: TimeInterval = 15
+    private let maxPatternDuration: TimeInterval = 5
 
     /// مدة بقاء البانر على الشاشة قبل إخفائه تلقائياً (60 ثانية)
-    private let bannerAutoDismiss: TimeInterval = 60
+    private let bannerAutoDismiss: TimeInterval = 5
 
-    // MARK: - Public API (يستعملها الـ ViewModel)
-
+    
+    // MARK: Public API (يستعملها الـ ViewModel)
     func showApproaching(message: String) {
         bannerMessage = message
         isArrival = false
@@ -462,8 +464,8 @@ final class InAppAlertManager: ObservableObject {
         stopPatternVibrationAndFlash()
     }
     
-    // MARK: - Private Helpers
     
+    // MARK: Private Helpers
     private func showBanner() {
         isShowingBanner = true
         startPatternVibrationAndFlash()
@@ -513,11 +515,11 @@ final class InAppAlertManager: ObservableObject {
     
     /// التحكم بالفلاش الحقيقي
     private func setTorch(on: Bool) {
+        // في السيميوليتر ما فيه كاميرا، فـ guard يحمي من المشاكل
         guard let device = AVCaptureDevice.default(.builtInWideAngleCamera,
                                                    for: .video,
                                                    position: .back),
               device.hasTorch else { return }
-        
         do {
             try device.lockForConfiguration()
             if on {
@@ -535,4 +537,92 @@ final class InAppAlertManager: ObservableObject {
 enum MetroAlertType: Equatable {
     case approaching(stationName: String, etaMinutes: Int)
     case arrival(stationName: String)
+}
+
+
+
+
+
+
+
+
+
+
+
+//MARK: -LocalNotificationManager → sends local notifications (arrival/approaching + backup timers).
+final class LocalNotificationManager {
+    
+    static let shared = LocalNotificationManager()
+    private init() {}
+    
+    func requestAuthIfNeeded() {
+        UNUserNotificationCenter.current().requestAuthorization(
+            options: [.alert, .sound, .badge]
+        ) { _, _ in }
+    }
+    
+    func cancelTripNotifications() {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(
+            withIdentifiers: [
+                "approaching_notification",
+                "arrival_notification"
+            ]
+        )
+    }
+    
+    func scheduleApproachingNotification(inMinutes minutes: Int, stationName: String) {
+        guard minutes > 0 else { return }
+        
+        let content = UNMutableNotificationContent()
+        content.title = String(
+            format: "alert.approaching".localized,
+            stationName
+        )
+        content.sound = .default
+        
+        let seconds = TimeInterval(minutes * 60)
+        let trigger = UNTimeIntervalNotificationTrigger(
+            timeInterval: max(seconds, 1),
+            repeats: false
+        )
+        
+        let request = UNNotificationRequest(
+            identifier: "approaching_notification",
+            content: content,
+            trigger: trigger
+        )
+        
+        UNUserNotificationCenter.current().removePendingNotificationRequests(
+            withIdentifiers: ["approaching_notification"]
+        )
+        UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
+    }
+    
+    func scheduleArrivalNotification(inMinutes minutes: Int, stationName: String) {
+        let content = UNMutableNotificationContent()
+        content.title = String(
+            format: "alert.arrived".localized,
+            stationName
+        )
+        content.sound = .default
+        
+        let clampedMinutes = max(minutes, 0)
+        let seconds = clampedMinutes == 0 ? 1.0 : TimeInterval(clampedMinutes * 60)
+        
+        let trigger = UNTimeIntervalNotificationTrigger(
+            timeInterval: seconds,
+            repeats: false
+        )
+        
+        let request = UNNotificationRequest(
+            identifier: "arrival_notification",
+            content: content,
+            trigger: trigger
+        )
+        
+        UNUserNotificationCenter.current().removePendingNotificationRequests(
+            withIdentifiers: ["arrival_notification"]
+        )
+        UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
+    }
 }

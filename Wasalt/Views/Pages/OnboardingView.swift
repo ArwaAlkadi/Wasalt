@@ -1,8 +1,17 @@
 import SwiftUI
 
 struct OnboardingView: View {
-    @StateObject private var viewModel = OnboardingViewModel()
+    @StateObject private var viewModel: OnboardingViewModel
     @Environment(\.colorScheme) var colorScheme
+    @Environment(\.locale) var locale
+    
+    init(viewModel: OnboardingViewModel = OnboardingViewModel()) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
+    
+    private var isArabic: Bool {
+        locale.language.languageCode?.identifier == "ar"
+    }
     
     var body: some View {
         Group {
@@ -15,7 +24,7 @@ struct OnboardingView: View {
                     HStack {
                         Spacer()
                         if viewModel.currentPage != viewModel.pages.count - 1 {
-                            Button("تخطي") {
+                            Button("onboarding.skip".localized) {
                                 viewModel.skip()
                             }
                             .padding(.horizontal, 30)
@@ -79,33 +88,28 @@ struct OnboardingView: View {
                         }
                         
                         HStack {
-                           
-                            
                             if viewModel.currentPage == viewModel.pages.count - 1 {
                                 Button(action: {
                                     viewModel.next()
                                 }) {
-                                    Text("ابدأ")
+                                    Text("onboarding.done".localized)
+                                        .font(.title3.bold())
                                         .frame(width: 150, height: 47)
                                         .background(Color(colorScheme == .light ? "GL" : "GD"))
                                         .foregroundColor(colorScheme == .light ? .white : .black)
-                                        .fontWeight(.bold)
                                         .cornerRadius(25)
                                 }
-                               
                             } else {
-                                HStack {
-                                    
-                                    Spacer()
-                                    Button(action: {
-                                        viewModel.next()
-                                    }) {
-                                        Image(systemName: "chevron.right.circle.fill")
-                                            .font(.system(size: 40))
-                                            .foregroundColor(.mainGreen)
-                                    }
-                                    .padding(.trailing, 20)
+                                Spacer()
+                                Button(action: {
+                                    viewModel.next()
+                                }) {
+                                    Image(systemName: isArabic ? "chevron.left.circle.fill"
+                                                               : "chevron.right.circle.fill")
+                                        .font(.system(size: 40))
+                                        .foregroundColor(.mainGreen)
                                 }
+                                .padding(.trailing, 20)
                             }
                         }
                         .padding(.bottom, 20)
@@ -118,5 +122,7 @@ struct OnboardingView: View {
 }
 
 #Preview {
-    OnboardingView()
+    let vm = OnboardingViewModel()
+    vm.isOnboardingFinished = false
+    return OnboardingView(viewModel: vm)
 }

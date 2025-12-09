@@ -39,6 +39,7 @@ struct RootAppView: View {
         }
     }
 }
+
 #Preview {
     RootAppView()
 }

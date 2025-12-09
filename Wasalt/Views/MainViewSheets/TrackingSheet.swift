@@ -22,34 +22,27 @@ struct TrackingSheet: View {
                 .ignoresSafeArea()
             
             VStack(spacing: 10) {
-                HStack  {
-                    Spacer()
-                    
-                    Text("الوقت المتوقع للوصول : \(metroVM.etaMinutes) دقيقة")
-                        .font(.title3.bold())
-                        .padding(.vertical, 15)
-                    
+                
+                // MARK: - ETA Header
+                HStack {
                     Image(systemName: "clock")
                         .font(.title3.bold())
                         .padding(.vertical, 15)
-                        .padding(.trailing)
+                    
+                    Text(String(format: "tracking.eta".localized, "\(metroVM.etaMinutes)"))
+                        .font(.title3.bold())
+                        .padding(.vertical, 15)
+                    
+                    Spacer()
                 }
+                .padding(.horizontal, 30)
                 .padding(.top, 25)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 
                 VStack(spacing: 5) {
                     
-                    HStack (spacing: 20) {
-                        Spacer()
-                        
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text("البداية")
-                                .foregroundColor(.mainGreen)
-                                .font(.body)
-                            
-                            Text(metroVM.startStation?.name ?? "—")
-                                .font(.body.bold())
-                        }
-                        
+                    // MARK: - Start Station
+                    HStack(spacing: 20) {
                         ZStack {
                             Circle()
                                 .fill(Color.mainGreen)
@@ -60,28 +53,35 @@ struct TrackingSheet: View {
                                 .scaledToFit()
                                 .frame(width: 30, height: 30)
                         }
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("tracking.start".localized)
+                                .foregroundColor(.mainGreen)
+                                .font(.body)
+                            
+                            Text(metroVM.startStation?.name ?? "—")
+                                .font(.body.bold())
+                        }
+                        
+                        Spacer()
                     }
-                    .padding(.trailing, 40)
+                    .padding(.horizontal, 40)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     
+                    // MARK: - Simple line if no middle stations
                     if metroVM.middleStations.isEmpty {
                         Rectangle()
                             .fill(Color.mainGreen)
                             .frame(width: 3, height: 30)
-                            .padding(.leading, 265)
+                            .padding(.trailing, 260)
                     }
                     
+                    // MARK: - Middle Stations
                     if !metroVM.middleStations.isEmpty {
-                        ZStack(alignment: .trailing) {
+                        ZStack(alignment: .leading) {
                             VStack(spacing: 12) {
                                 ForEach(metroVM.middleStations) { station in
                                     HStack(spacing: 12) {
-                                        Spacer()
-                                        
-                                        VStack(alignment: .trailing, spacing: 2) {
-                                            Text(station.name)
-                                                .font(.footnote)
-                                        }
-                                        
                                         ZStack {
                                             Circle()
                                                 .foregroundStyle(.mainGreen)
@@ -106,26 +106,23 @@ struct TrackingSheet: View {
                                                     }
                                             }
                                         }
+                                        
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(station.name)
+                                                .font(.footnote)
+                                        }
+                                        
+                                        Spacer()
                                     }
-                                    .padding(.trailing, 55)
+                                    .padding(.leading, 55)
                                 }
                             }
                             .padding(.vertical, 12)
                         }
                     }
                     
-                    HStack (spacing: 20) {
-                        Spacer()
-                        
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text("الوجهة")
-                                .foregroundColor(.mainGreen)
-                                .font(.body)
-                            
-                            Text(metroVM.selectedDestination?.name ?? "—")
-                                .font(.body.bold())
-                        }
-                        
+                    // MARK: - Destination
+                    HStack(spacing: 20) {
                         ZStack {
                             Circle()
                                 .fill(Color.mainGreen)
@@ -136,21 +133,34 @@ struct TrackingSheet: View {
                                 .scaledToFit()
                                 .frame(width: 30, height: 30)
                         }
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("tracking.destination".localized)
+                                .foregroundColor(.mainGreen)
+                                .font(.body)
+                            
+                            Text(metroVM.selectedDestination?.name ?? "—")
+                                .font(.body.bold())
+                        }
+                        
+                        Spacer()
                     }
-                    .padding(.trailing, 40)
+                    .padding(.horizontal, 40)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 
                 Spacer()
                 
+                // MARK: - Buttons
                 HStack {
                     Button(action: {
                         metroVM.endTripAndReset()
                         isPresented = false
                     }) {
-                        Text("إنهاء الرحلة")
-                            .font(.title3.bold())
+                        Text("tracking.endTrip".localized)
+                            .font(.body.bold())
                             .foregroundColor(.white)
-                            .frame(width: 170, height: 25)
+                            .frame(width: 175, height: 25)
                             .padding(.vertical, 15)
                             .background(Color.red.opacity(0.9))
                             .cornerRadius(25)
@@ -162,15 +172,16 @@ struct TrackingSheet: View {
                         isPresented = false
                         ShowStationSheet = true
                     }) {
-                        Text("بغير وجهتي")
-                            .font(.title3.bold())
-                            .foregroundColor(.white)
-                            .frame(width: 170, height: 25)
+                        Text("tracking.change".localized)
+                            .font(.body.bold())
+                            .foregroundColor(.whiteBlack)
+                            .frame(width: 175, height: 25)
                             .padding(.vertical, 15)
-                            .background(Color.secondGreen)
+                            .background(Color.mainGreen)
                             .cornerRadius(25)
                     }
                 }
+                .padding(.horizontal)
             }
         }
     }
@@ -181,7 +192,7 @@ struct TrackingSheet: View {
     let mockVM = MetroTripViewModel(stations: stations)
     
     mockVM.startStation = stations[0]
-    mockVM.selectedDestination = stations[8]
+    mockVM.selectedDestination = stations[1]
     mockVM.currentNearestStation = stations[1]
     mockVM.lastPassedStation = stations[1]
     mockVM.upcomingStations = [

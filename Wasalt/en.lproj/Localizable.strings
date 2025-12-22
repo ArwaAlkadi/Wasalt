@@ -58,8 +58,9 @@
 /* Alerts */
 "alert.approaching" = "Get ready! Approaching %@";
 "alert.arrived" = "You have arrived at %@";
-"alert.wrongDirection.title.noTerminal" = "Wrong direction detected";
-"alert.wrongDirection.title.withTerminal" = "Wrong direction detected. Take the yellow train heading toward %@";
+"alert.wrongDirection.title" = "Wrong direction detected!";
+"alert.wrongDirection.body.noTerminal" = "You are riding in the opposite direction. Please change trains.";
+"alert.wrongDirection.body.withTerminal" = "You are riding in the opposite direction. Take the yellow line heading toward %@.";
 
 /* Permissions */
 "permission.location.title" = "Enable Location";

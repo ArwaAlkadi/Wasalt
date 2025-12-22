@@ -170,9 +170,9 @@ struct MainView: View {
                 let terminal = metroVM.correctTerminalName ?? ""
 
                 let msg = terminal.isEmpty
-                ? "alert.wrongDirection.title.noTerminal".localized
+                ? "alert.wrongDirection.body.noTerminal".localized
                 : String(
-                    format: "alert.wrongDirection.title.withTerminal".localized,
+                    format: "alert.wrongDirection.body.withTerminal".localized,
                     terminal
                 )
 

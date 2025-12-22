@@ -59,8 +59,7 @@ final class LocalNotificationManager {
                 "arrival_notification",
                 "approaching_notification_geofence",
                 "arrival_notification_geofence",
-                "wrong_direction_notification",
-                "wrong_direction_notification_geofence"
+                "wrong_direction_notification"
             ]
         )
     }
@@ -69,29 +68,6 @@ final class LocalNotificationManager {
         cancelTripNotifications()
         scheduleApproachingNotification(for: station)
         scheduleArrivalNotification(for: station)
-    }
-
-    //  Wrong Direction (Time trigger) — called when geofence fires & trip is valid (from didEnterRegion)
-    func notifyWrongDirection(terminalName: String) {
-        let content = UNMutableNotificationContent()
-
-        content.title = terminalName.isEmpty
-        ? "alert.wrongDirection.title.noTerminal".localized
-        : String(
-            format: "alert.wrongDirection.title.withTerminal".localized,
-            terminalName
-        )
-
-        content.sound = .default
-
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
-        let req = UNNotificationRequest(
-            identifier: "wrong_direction_notification_geofence",
-            content: content,
-            trigger: trigger
-        )
-
-        UNUserNotificationCenter.current().add(req)
     }
 
     private func scheduleApproachingNotification(for station: Station) {
@@ -192,12 +168,13 @@ final class LocalNotificationManager {
         )
 
         let content = UNMutableNotificationContent()
-        content.title = terminalName.isEmpty
-        ? "alert.wrongDirection.title.noTerminal".localized
-        : String(
-            format: "alert.wrongDirection.title.withTerminal".localized,
-            terminalName
-        )
+        content.title = "alert.wrongDirection.title".localized
+        content.body = terminalName.isEmpty
+            ? "alert.wrongDirection.body.noTerminal".localized
+            : String(
+                format: "alert.wrongDirection.body.withTerminal".localized,
+                terminalName
+            )
         content.sound = .default
 
         let region = CLCircularRegion(

@@ -58,8 +58,9 @@
 /* Alerts */
 "alert.approaching" = "استعد! قربنا من %@";
 "alert.arrived" = "وصلت إلى %@";
-"alert.wrongDirection.title.noTerminal" = "أنت على الاتجاه المعاكس";
-"alert.wrongDirection.title.withTerminal" = "أنت على الاتجاه المعاكس! اتجه إلى المترو الأصفر المتجه إلى %@";
+"alert.wrongDirection.title" = "تنبيه: اتجاه خاطئ!";
+"alert.wrongDirection.body.noTerminal" = "أنت على المسار المعاكس. الرجاء تغيير القطار.";
+"alert.wrongDirection.body.withTerminal" = "أنت على المسار المعاكس. اتجه إلى المسار الأصفر المتجه إلى %@.";
 
 /* Permission Alerts */
 "permission.location.title" = "فعّل الموقع";

@@ -81,7 +81,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         UserDefaults.standard.set(destination.name,  forKey: "currentDestinationName")
         UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: "tripStartTimestamp")
 
-        // اسم الترمينال الصحيح لإشعار العكس
+        // العكس
         let correctTerminalName: String
         if destination.order > start.order {
             correctTerminalName = allStations.max(by: { $0.order < $1.order })?.name ?? ""
@@ -134,7 +134,6 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
 
             print("🚨 [GeoFence] Monitoring WRONG direction at \(wrongStation.name)")
 
-            // ✅ هذا أهم جزء: إشعار العكس كـ Location Notification (يشتغل برا التطبيق)
             LocalNotificationManager.shared.scheduleWrongDirectionNotification(
                 wrongStation: wrongStation,
                 terminalName: correctTerminalName
@@ -203,17 +202,14 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
 
         let destOrder = UserDefaults.standard.integer(forKey: "currentDestinationOrder")
         let destName  = UserDefaults.standard.string(forKey: "currentDestinationName") ?? ""
-        let terminal  = UserDefaults.standard.string(forKey: "correctTerminalName") ?? ""
 
         let notif = LocalNotificationManager.shared
 
+        //  عكس الاتجاه
         if circular.identifier == "wrong_direction" {
             print("🚨 [GeoFence] Wrong direction detected")
 
-            //  إشعار محلي (Fallback إضافي — نفس الاقتراب/الوصول)
-            notif.notifyWrongDirection(terminalName: terminal)
-
-            //  داخل التطبيق (بانر)
+            // داخل التطبيق فقط (بانر)
             DispatchQueue.main.async {
                 self.wrongDirectionTriggered = true
             }

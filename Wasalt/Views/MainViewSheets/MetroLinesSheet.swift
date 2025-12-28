@@ -9,6 +9,7 @@ import CoreLocation
 struct MetroLinesSheet: View {
     
     @Binding var showSheet: Bool
+    @Binding var showTrackingSheet: Bool
     @State private var selectedLine: MetroLine? = nil
     
     @ObservedObject var metroVM: MetroTripViewModel
@@ -78,6 +79,7 @@ struct MetroLinesSheet: View {
     StatefulPreviewWrapper(false) { value in
         MetroLinesSheet(
             showSheet: value,
+            showTrackingSheet: .constant(false),
             metroVM: MetroTripViewModel(stations: MetroData.yellowLineStations),
             permissionsVM: PermissionsViewModel(),
             getCurrentLocation: { nil }

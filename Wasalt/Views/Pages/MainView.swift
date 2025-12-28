@@ -15,6 +15,7 @@ struct MainView: View {
     @State private var showLineSheet: Bool = false // <-- New
     @State private var showTrackingSheet: Bool = false
     @State private var showArrivalSheet: Bool = false
+    @State private var showStationSheet: Bool = false
 
     @Environment(\.colorScheme) var scheme
 
@@ -84,6 +85,7 @@ struct MainView: View {
         .sheet(isPresented: $showLineSheet) {
             MetroLinesSheet(
                 showSheet: $showLineSheet,
+                showTrackingSheet: $showTrackingSheet,
                 metroVM: metroVM,
                 permissionsVM: permissionsVM,
                 getCurrentLocation: { locationManager.userLocation }

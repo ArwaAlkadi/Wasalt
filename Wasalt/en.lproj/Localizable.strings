@@ -136,19 +136,22 @@
 "sheet.status.notNearMetro" = "Move closer to the metro line to begin.";
 "sheet.status.noLocation" = "Cannot start the trip because your location is unavailable.";
 "sheet.status.chooseDestination" = "Please select a station first.";
-"status.alreadyAtDestination" = "You are already at your station: %@";
+"status.alreadyAtDestination" = "You are already at your nearest station: %@";
 "lineSupport.notice" = "Only the Yellow Line is supported for now. More lines are coming soon.";
 
 /* Tracking Sheet */
-"tracking.eta" = "Estimated arrival: %@ minutes";
+"tracking.eta" = "Estimated arrival time: %@ min";
 "tracking.start" = "Start";
 "tracking.destination" = "Destination";
 "tracking.change" = "Change Station";
 "tracking.endTrip" = "End Trip";
+"tracking.nextStation" = "Your station is next";
+"tracking.nearDestination" = "You’re almost there";
 
 /* Arrival Sheet */
 "arrival.title" = "You’ve arrived!";
 "arrival.back" = "Back";
+"trip.arrived" = "You have arrived at your station: %@";
 
 /* Alerts */
 "alert.approaching" = "Get ready! Approaching %@";
@@ -168,4 +171,3 @@
 "error.unknown" = "An unexpected error occurred. Please try again.";
 "trip.error.unknownLastStation" = "We couldn’t determine the last station you boarded from.";
 "trip.error.nearestStationNotFound" = "We couldn’t determine the nearest station to your location.";
-"trip.arrived" = "You have arrived at your station: %@";

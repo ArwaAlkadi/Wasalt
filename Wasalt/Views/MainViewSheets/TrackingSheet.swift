@@ -28,7 +28,8 @@ struct TrackingSheet: View {
                         .font(.title3.bold())
                         .padding(.vertical, 15)
                     
-                    Text(String(format: "tracking.eta".localized, "\(metroVM.etaMinutes)"))
+                    //  تعديل الواجهة لما يطلع الوقت 0
+                    Text(etaDisplayText)
                         .font(.title3.bold())
                         .padding(.vertical, 15)
                     
@@ -187,6 +188,12 @@ struct TrackingSheet: View {
                 .padding(.bottom, 10)
             }
         }
+    }
+    
+    private var etaDisplayText: String {
+        if metroVM.stationsRemaining == 1 { return "tracking.nextStation".localized }
+        if metroVM.etaMinutes == 0 { return "tracking.nearDestination".localized }
+        return String(format: "tracking.eta".localized, "\(metroVM.etaMinutes)")
     }
 }
 

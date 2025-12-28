@@ -41,7 +41,7 @@
 "sheet.status.notNearMetro" = "قرب من خط المترو عشان تقدر تبدأ.";
 "sheet.status.noLocation" = "ما نقدر نبدأ: موقعك غير معروف.";
 "sheet.status.chooseDestination" = "اختر محطتك أولاً.";
-"status.alreadyAtDestination" = "أنت بالفعل في محطتك: %@";
+"status.alreadyAtDestination" = "أنت بالفعل عند أقرب محطة لك: %@";
 "lineSupport.notice" = "حالياً ندعم المسار الأصفر فقط — وباقي المسارات جاية قريب!";
 
 /* Tracking Sheet */
@@ -50,10 +50,13 @@
 "tracking.destination" = "الوجهة";
 "tracking.change" = "بغير محطتي";
 "tracking.endTrip" = "إنهاء الرحلة";
+"tracking.nextStation" = "محطتك هي المحطة الجاية";
+"tracking.nearDestination" = "قربت لمحطتك";
 
 /* Arrival Sheet */
 "arrival.title" = "وصلت محطتك!";
 "arrival.back" = "رجوع";
+"trip.arrived" = "وصلت إلى محطتك %@";
 
 /* Alerts */
 "alert.approaching" = "استعد! قربنا من %@";
@@ -73,4 +76,3 @@
 "error.unknown" = "حدث خطأ غير متوقع. حاول مرة أخرى.";
 "trip.error.unknownLastStation" = "ما قدرنا نعرف آخر محطة ركبت منها.";
 "trip.error.nearestStationNotFound" = "ما قدرنا نحدد أقرب محطة.";
-"trip.arrived" = "وصلت إلى محطتك %@";

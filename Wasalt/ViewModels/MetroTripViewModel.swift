@@ -21,6 +21,10 @@ final class MetroTripViewModel: ObservableObject {
     private let stations: [Station]
     private let notificationManager: LocalNotificationManager
 
+ 
+    private let locationManager: LocationManager?
+    private var cancellables = Set<AnyCancellable>()
+
     @Published var selectedDestination: Station?
     @Published var isTracking: Bool = false
     @Published var startStation: Station?
@@ -47,10 +51,25 @@ final class MetroTripViewModel: ObservableObject {
 
     init(
         stations: [Station],
-        notificationManager: LocalNotificationManager = .shared
+        notificationManager: LocalNotificationManager = .shared,
+        locationManager: LocationManager? = nil
     ) {
         self.stations = stations
         self.notificationManager = notificationManager
+        self.locationManager = locationManager
+
+        locationManager?.$tripExpired
+            .receive(on: RunLoop.main)
+            .sink { [weak self] expired in
+                guard let self = self else { return }
+                guard expired else { return }
+
+                self.isTracking = false
+                self.showArrivalSheet = false
+                self.resetProgress(keepDestination: false)
+                self.notificationManager.cancelTripNotifications()
+            }
+            .store(in: &cancellables)
     }
 
     func selectDestination(_ station: Station) {
@@ -101,7 +120,6 @@ final class MetroTripViewModel: ObservableObject {
                                           longitude: baseStation.coordinate.longitude)
 
             notificationManager.scheduleLocationNotifications(for: dest)
-
             updateProgress(for: fakeLocation)
             return
         }
@@ -145,7 +163,6 @@ final class MetroTripViewModel: ObservableObject {
         statusText = ""
 
         notificationManager.scheduleLocationNotifications(for: dest)
-
         updateProgress(for: location)
     }
 
@@ -243,7 +260,7 @@ final class MetroTripViewModel: ObservableObject {
         let distanceToDest = destLocation.distance(from: location)
 
         if distanceToDest <= arrivalDistance {
-            statusText = String( format: "trip.arrived".localized, dest.name)
+            statusText = String(format: "trip.arrived".localized, dest.name)
             isTracking = false
             showArrivalSheet = true
             upcomingStations = []

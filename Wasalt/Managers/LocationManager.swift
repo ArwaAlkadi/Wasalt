@@ -7,7 +7,7 @@
 
 /*
     تنبيه مهم
- 
+
      Important note about LocationManager and notifications
 
      LocationManager (Geofencing) is part of the iOS system itself,
@@ -45,7 +45,11 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     @Published var userLocation: CLLocation?
     @Published var wrongDirectionTriggered: Bool = false
 
+    //  هذا اللي بتراقبه الواجهة/الفيو مودل
+    @Published var tripExpired: Bool = false
+
     private let tripExpirySeconds: TimeInterval = 2.5 * 60 * 60
+    private var expiryTimer: AnyCancellable?
 
     override init() {
         super.init()
@@ -57,6 +61,8 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
             manager.allowsBackgroundLocationUpdates = true
             manager.pausesLocationUpdatesAutomatically = false
         }
+
+        startExpiryTimer()
     }
 
     func requestPermission() {
@@ -76,6 +82,8 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         }
 
         stopTripGeofences()
+
+        tripExpired = false
 
         UserDefaults.standard.set(destination.order, forKey: "currentDestinationOrder")
         UserDefaults.standard.set(destination.name,  forKey: "currentDestinationName")
@@ -158,6 +166,45 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         print("🧹 [GeoFence] Stop trip geofences")
     }
 
+    // MARK: - Expiry (UI helper)
+    private func startExpiryTimer() {
+        expiryTimer?.cancel()
+        expiryTimer = Timer
+            .publish(every: 15, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                self?.checkTripExpiryAndExpireIfNeeded()
+            }
+    }
+
+    private func checkTripExpiryAndExpireIfNeeded() {
+        // ما فيه رحلة؟ لا تسوي شي
+        guard UserDefaults.standard.object(forKey: "currentDestinationOrder") != nil else {
+            return
+        }
+
+        let startTS = UserDefaults.standard.double(forKey: "tripStartTimestamp")
+        guard startTS != 0 else {
+            expireTrip()
+            return
+        }
+
+        let elapsed = Date().timeIntervalSince1970 - startTS
+        if elapsed > tripExpirySeconds {
+            expireTrip()
+        }
+    }
+
+    private func expireTrip() {
+        guard tripExpired == false else { return }
+
+        print("⏱️ [GeoFence] Trip expired — cancel everything")
+        tripExpired = true
+
+        stopTripGeofences()
+        LocalNotificationManager.shared.cancelTripNotifications()
+    }
+
     // MARK: - CLLocationManagerDelegate
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         switch status {
@@ -187,16 +234,14 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         //  expiry 2.5h (ينطبق على كل شيء: وصول/اقتراب/عكس)
         let startTS = UserDefaults.standard.double(forKey: "tripStartTimestamp")
         if startTS == 0 {
-            stopTripGeofences()
-            LocalNotificationManager.shared.cancelTripNotifications()
+            expireTrip()
             return
         }
 
         let elapsed = Date().timeIntervalSince1970 - startTS
         if elapsed > tripExpirySeconds {
             print("⏱️ [GeoFence] Trip expired — no notification")
-            stopTripGeofences()
-            LocalNotificationManager.shared.cancelTripNotifications()
+            expireTrip()
             return
         }
 
@@ -245,3 +290,4 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         print("✅ [GeoFence] Started monitoring: \(region.identifier)")
     }
 }
+

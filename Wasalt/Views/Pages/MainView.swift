@@ -5,8 +5,10 @@ import _MapKit_SwiftUI
 struct MainView: View {
 
     @StateObject var vm = MapViewModel()
-    @StateObject private var metroVM = MetroTripViewModel(stations: MetroData.yellowLineStations)
-    @StateObject private var locationManager = LocationManager()
+
+    @StateObject private var locationManager: LocationManager
+    @StateObject private var metroVM: MetroTripViewModel
+
     @StateObject private var permissionsVM = PermissionsViewModel()
     @StateObject private var alertManager = InAppAlertManager()
 
@@ -15,6 +17,15 @@ struct MainView: View {
     @State private var showArrivalSheet: Bool = false
 
     @Environment(\.colorScheme) var scheme
+
+    init() {
+        let lm = LocationManager()
+        _locationManager = StateObject(wrappedValue: lm)
+        _metroVM = StateObject(wrappedValue: MetroTripViewModel(
+            stations: MetroData.yellowLineStations,
+            locationManager: lm
+        ))
+    }
 
     var body: some View {
         ZStack {
@@ -85,8 +96,8 @@ struct MainView: View {
         // MARK: - Tracking & Arrival Sheets (unchanged)
         .sheet(isPresented: $showTrackingSheet) {
             TrackingSheet(
-                ShowStationSheet: $showLineSheet, // <-- showLineSheet instead
-                isPresented: $showArrivalSheet,
+                ShowStationSheet: $showStationSheet,
+                isPresented: $showTrackingSheet,
                 metroVM: metroVM
             )
             .presentationDetents([.height(460), .height(550)])
@@ -103,7 +114,7 @@ struct MainView: View {
                 .presentationBackgroundInteraction(.enabled)
         }
 
-        // MARK: - Permissions & Alerts (unchanged)
+        // MARK: - Logic
         .onAppear {
             permissionsVM.refreshPermissions()
             locationManager.requestPermission()
@@ -168,6 +179,19 @@ struct MainView: View {
             }
         }
 
+        //  هنا UI تعرف إن الرحلة انتهت وتسكر TrackingSheet
+        .onReceive(locationManager.$tripExpired) { expired in
+            guard expired else { return }
+
+            metroVM.endTripAndReset()
+
+            showTrackingSheet = false
+            showArrivalSheet = false
+            showStationSheet = true
+
+            locationManager.tripExpired = false
+        }
+
         // MARK: - Permission Alerts
         .alert("permission.location.title".localized,
                isPresented: $permissionsVM.showLocationSettingsAlert) {
@@ -190,7 +214,7 @@ struct MainView: View {
         }
     }
 
-    // MARK: - Banner & Helpers (unchanged)
+    // MARK: - Banner View
     private var bannerView: some View {
         HStack {
             HStack {
@@ -219,9 +243,14 @@ struct MainView: View {
 
     private var bannerIconName: String {
         switch alertManager.bannerType {
-        case .arrival: return scheme == .dark ? "ArrivedDark" : "ArrivedLight"
-        case .approaching: return scheme == .dark ? "NearbyDark" : "NearbyLight"
-        case .wrongDirection: return scheme == .dark ? "warning" : "warning-2"
+        case .arrival:
+            return scheme == .dark ? "ArrivedDark" : "ArrivedLight"
+
+        case .approaching:
+            return scheme == .dark ? "NearbyDark" : "NearbyLight"
+
+        case .wrongDirection:
+            return scheme == .dark ?  "warning" : "warning-2"
         }
     }
 

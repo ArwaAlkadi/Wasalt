@@ -21,20 +21,13 @@ class MapViewModel: ObservableObject {
         )
     )
 
-    @Published var stations: [Station] = [
-        Station(name: "station.kafd".localized,        order: 8, coordinate: .init(latitude: 24.7671553, longitude: 46.6432711), minutesToNext: 5),
-        Station(name: "station.ar_rabi".localized,     order: 7, coordinate: .init(latitude: 24.7862360, longitude: 46.6601248), minutesToNext: 5),
-        Station(name: "station.uthman_bin_affan".localized, order: 6, coordinate: .init(latitude: 24.8013955, longitude: 46.6961421), minutesToNext: 4),
-        Station(name: "station.sabic".localized,       order: 5, coordinate: .init(latitude: 24.8070691, longitude: 46.7095294), minutesToNext: 3),
-        Station(name: "station.pnu1".localized,        order: 4, coordinate: .init(latitude: 24.8414744, longitude: 46.7174164), minutesToNext: 6),
-        Station(name: "station.pnu2".localized,        order: 3, coordinate: .init(latitude: 24.8596218, longitude: 46.7045103), minutesToNext: 3),
-        Station(name: "station.airport_t5".localized,  order: 2, coordinate: .init(latitude: 24.9407856, longitude: 46.7102385), minutesToNext: 11),
-        Station(name: "station.airport_t3_4".localized, order: 1, coordinate: .init(latitude: 24.9560402, longitude: 46.7021429), minutesToNext: 3),
-        Station(name: "station.airport_t1_2".localized, order: 0, coordinate: .init(latitude: 24.9609970, longitude: 46.6989819), minutesToNext: 3)
-    ]
+    @Published var stations: [Station] = MetroLine.allCases
+        .flatMap { $0.stations }
+        .uniqueByCoordinate()
+
 
     // All lines
-    @Published var allRoutePolylines: [(name: String, points: [MKMapPoint])] = []
+    @Published var allRoutePolylines: [(line: MetroLine, points: [MKMapPoint])] = []
 
     // Selected line (Yellow line by default)
     @Published var selectedLineName: String? = "Yellow line"
@@ -56,21 +49,25 @@ class MapViewModel: ObservableObject {
                 if let feature = obj as? MKGeoJSONFeature,
                    let propsData = feature.properties,
                    let props = try? JSONSerialization.jsonObject(with: propsData) as? [String: Any],
-                   let lineName = props["metrolinename"] as? String {
+                   let lineName = props["metrolinename"] as? String,
+                   let metroLine = MetroLine(geoJSONName: lineName) {
 
                     for geometry in feature.geometry {
+
                         if let poly = geometry as? MKPolyline {
                             let points = convertPolylineToPoints(poly)
-                            allRoutePolylines.append((name: lineName, points: points))
+                            allRoutePolylines.append((line: metroLine, points: points))
+
                         } else if let multi = geometry as? MKMultiPolyline {
                             for poly in multi.polylines {
                                 let points = convertPolylineToPoints(poly)
-                                allRoutePolylines.append((name: lineName, points: points))
+                                allRoutePolylines.append((line: metroLine, points: points))
                             }
                         }
                     }
                 }
             }
+
 
         } catch {
             print("GeoJSON decode error: \(error)")

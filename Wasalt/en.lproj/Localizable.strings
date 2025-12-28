@@ -6,7 +6,75 @@
  
 */
 
-/* Stations */
+
+/* BLUE LINE (Line 1) */
+"station.sab" = "SAB";
+"station.dr_sulaiman_al_habib" = "Dr. Sulaiman Al Habib";
+"station.kafd" = "KAFD"; // Already exists
+"station.al_murooj" = "Al Murooj";
+"station.king_fahad_district" = "King Fahad District";
+"station.king_fahad_district_2" = "King Fahad District 2";
+"station.stc" = "STC";
+"station.al_wurud_2" = "Al Wurud 2";
+"station.al_urubah" = "Al Urubah";
+"station.alinma_bank" = "Alinma Bank";
+"station.bank_albilad" = "Bank Albilad";
+"station.king_fahad_library" = "King Fahad Library";
+"station.ministry_of_interior" = "Ministry of Interior";
+"station.passport_department" = "Passport Department";
+"station.national_museum" = "National Museum"; // Already exists
+"station.al_batha" = "Al Batha";
+"station.qasr_al_hokm" = "Qasr Al Hokm";
+"station.al_oud" = "Al Oud";
+"station.skirinah" = "Skirinah";
+"station.manfouhah" = "Manfouhah";
+"station.al_iman_hospital" = "Al Iman Hospital";
+"station.transportation_center" = "Transportation Center";
+"station.al_aziziah" = "Al Aziziah";
+"station.ad_dar_al_baida" = "Ad Dar Al Baida";
+
+/* RED LINE (Line 2) */
+"station.king_saud_university" = "King Saud University";
+"station.king_salman_oasis" = "King Salman Oasis";
+"station.kacst" = "KACST";
+"station.at_takhassussi" = "At Takhassussi";
+"station.stc" = "STC"; // Already exists
+"station.al_wurud" = "Al Wurud";
+"station.king_abdulaziz_road" = "King Abdulaziz Road";
+"station.ministry_of_education" = "Ministry of Education"; // Already exists
+"station.an_nuzhah" = "An Nuzhah";
+"station.riyadh_exhibition_center" = "Riyadh Exhibition Center";
+"station.khalid_bin_alwaleed" = "Khalid Bin Alwaleed";
+"station.al_hamra" = "Al Hamra";
+"station.al_khaleej" = "Al Khaleej";
+"station.ishbiliyah" = "Ishbiliyah";
+"station.king_fahad_sport_city" = "King Fahad Sport City";
+
+/* ORANGE LINE (Line 3) */
+"station.jeddah_road" = "Jeddah Road";
+"station.tuwaiq" = "Tuwaiq";
+"station.ad_douh" = "Ad Douh";
+"station.western_station" = "Western Station";
+"station.aishah_bint_abi_bakr" = "Aishah Bint Abi Bakr";
+"station.dhahrat_al_badiah" = "Dhahrat Al Badiah";
+"station.sultanah" = "Sultanah";
+"station.al_jarradiyah" = "Al Jarradiyah";
+"station.courts_complex" = "Courts Complex";
+"station.qasr_al_hokm" = "Qasr Al Hokm"; // Already exists
+"station.al_hilla" = "Al Hilla";
+"station.al_margab" = "Al Margab";
+"station.as_salhiyah" = "As Salhiyah";
+"station.first_industrial_city" = "First Industrial City";
+"station.railway" = "Railway";
+"station.al_malaz" = "Al Malaz";
+"station.jarir_district" = "Jarir District";
+"station.al_rajhi_mosque" = "Al Rajhi Mosque";
+"station.harun_ar_rashid_road" = "Harun Ar Rashid Road";
+"station.an_naseem" = "An Naseem"; // Already exists
+"station.hassan_bin_thabit" = "Hassan Bin Thabit";
+"station.khashm_al_an" = "Khashm Al An";
+
+/* YELLOW LINE (Line 4) */
 "station.kafd" = "KAFD";
 "station.ar_rabi" = "Al Rabi";
 "station.uthman_bin_affan" = "Othman Bin Affan";
@@ -16,6 +84,30 @@
 "station.airport_t5" = "Terminal 5";
 "station.airport_t3_4" = "Terminal 3–4";
 "station.airport_t1_2" = "Terminal 1–2";
+
+/* GREEN LINE (Line 5) */
+"station.national_museum" = "National Museum"; // Already exists
+"station.ministry_of_finance" = "Ministry of Finance";
+"station.king_abdulaziz_hospital" = "King Abdulaziz Hospital";
+"station.ministry_of_defense" = "Ministry of Defense";
+"station.al_wizarat" = "Al Wizarat";
+"station.gosi" = "GOSI";
+"station.officers_club" = "Officers Club";
+"station.abu_dhabi_square" = "Abu Dhabi Square";
+"station.ad_dhabab" = "Ad Dhabab";
+"station.as_sulimaniyah" = "As Sulimaniyah";
+"station.king_salman_park" = "King Salman Park";
+"station.ministry_of_education" = "Ministry of Education"; // Already exists
+
+/* PURPLE LINE (Line 6) */
+// station.kafd, ar_rabi, uthman_bin_affan, sabic already exist
+"station.granadia" = "Granadia";
+"station.al_yarmuk" = "Al Yarmuk";
+"station.al_hamra" = "Al Hamra"; // Already exists
+"station.al_andalus" = "Al Andalus";
+"station.khurais_road" = "Khurais Road";
+"station.as_salam" = "As Salam";
+"station.an_naseem" = "An Naseem"; // Already exists
 
 /* General */
 "ok" = "OK";

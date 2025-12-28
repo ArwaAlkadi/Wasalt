@@ -35,27 +35,29 @@ struct MainView: View {
 
                 UserAnnotation()
 
-                if let selectedName = vm.selectedLineName,
-                   let topLine = vm.allRoutePolylines.first(where: { $0.name == selectedName }) {
-                    MapPolyline(points: topLine.points)
-                        .stroke(.yellow, lineWidth: 6)
+                ForEach(vm.allRoutePolylines.indices, id: \.self) { index in
+                    let route = vm.allRoutePolylines[index]
+
+                    MapPolyline(points: route.points)
+                        .stroke(route.line.color, lineWidth: 4)
+
                 }
 
                 ForEach(vm.stations) { station in
                     Annotation(station.name, coordinate: station.coordinate) {
                         ZStack {
                             Circle()
-                                .fill(Color.yellow)
+                                .fill(stationLineColor(station))
                                 .frame(width: 18, height: 18)
-                                .shadow(radius: 3)
 
                             Circle()
-                                .fill(Color.white)
-                                .frame(width: 8, height: 8)
-                                .shadow(radius: 3)
+                                .fill(.white)
+                                .frame(width: 7, height: 7)
                         }
                     }
                 }
+                
+
             }
             .ignoresSafeArea()
 
@@ -269,6 +271,16 @@ struct MainView: View {
             return scheme == .dark ?  "warning" : "warning-2"
         }
     }
+    
+    func stationLineColor(_ station: Station) -> Color {
+        for line in MetroLine.allCases {
+            if line.stations.contains(where: { $0.id == station.id }) {
+                return line.color
+            }
+        }
+        return .gray
+    }
+
 }
 
 #Preview {

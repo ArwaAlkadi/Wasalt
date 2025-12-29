@@ -172,3 +172,10 @@
 "error.unknown" = "An unexpected error occurred. Please try again.";
 "trip.error.unknownLastStation" = "We couldn’t determine the last station you boarded from.";
 "trip.error.nearestStationNotFound" = "We couldn’t determine the nearest station to your location.";
+
+"metro.line.blue" = "Blue Line";
+"metro.line.red" = "Red Line";
+"metro.line.orange" = "Orange Line";
+"metro.line.yellow" = "Yellow Line";
+"metro.line.green" = "Green Line";
+"metro.line.purple" = "Purple Line";

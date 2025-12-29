@@ -171,3 +171,11 @@
 "error.unknown" = "حدث خطأ غير متوقع. حاول مرة أخرى.";
 "trip.error.unknownLastStation" = "ما قدرنا نعرف آخر محطة ركبت منها.";
 "trip.error.nearestStationNotFound" = "ما قدرنا نحدد أقرب محطة.";
+
+
+"metro.line.blue" = "الخط الأزرق";
+"metro.line.red" = "الخط الأحمر";
+"metro.line.orange" = "الخط البرتقالي";
+"metro.line.yellow" = "الخط الأصفر";
+"metro.line.green" = "الخط الأخضر";
+"metro.line.purple" = "الخط البنفسجي";

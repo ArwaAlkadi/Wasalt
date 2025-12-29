@@ -53,17 +53,6 @@ enum MetroLine: String, CaseIterable, Identifiable {
         }
     }
 
-    // MARK: - Display Name (optional)
-    var displayName: String {
-        switch self {
-        case .line1: return "Blue Line"
-        case .line2: return "Red Line"
-        case .line3: return "Orange Line"
-        case .line4: return "Yellow Line"
-        case .line5: return "Green Line"
-        case .line6: return "Purple Line"
-        }
-    }
 }
 
 extension Array where Element == Station {
@@ -88,5 +77,25 @@ extension MetroLine {
         case "purple line": self = .line6
         default: return nil
         }
+    }
+}
+
+extension MetroLine {
+
+    /// Localization key for the line name
+    private var localizationKey: String {
+        switch self {
+        case .line1: return "metro.line.blue"
+        case .line2: return "metro.line.red"
+        case .line3: return "metro.line.orange"
+        case .line4: return "metro.line.yellow"
+        case .line5: return "metro.line.green"
+        case .line6: return "metro.line.purple"
+        }
+    }
+
+    /// Localized display name
+    var displayName: String {
+        NSLocalizedString(localizationKey, comment: "")
     }
 }

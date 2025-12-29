@@ -18,8 +18,9 @@ enum TripRadius {
 // MARK: - MetroTripViewModel → handles trip flow, ETA updates, and arrival logic.
 final class MetroTripViewModel: ObservableObject {
 
-    private let stations: [Station]
+    private var allStations: [Station]
     private let notificationManager: LocalNotificationManager
+    @Published private(set) var stations: [Station]  // Only stations in the selected line
 
  
     private let locationManager: LocationManager?
@@ -54,10 +55,11 @@ final class MetroTripViewModel: ObservableObject {
         notificationManager: LocalNotificationManager = .shared,
         locationManager: LocationManager? = nil
     ) {
-        self.stations = stations
         self.notificationManager = notificationManager
         self.locationManager = locationManager
-
+        self.allStations = stations
+        self.stations = stations  // Default: all stations
+        
         locationManager?.$tripExpired
             .receive(on: RunLoop.main)
             .sink { [weak self] expired in
@@ -71,6 +73,11 @@ final class MetroTripViewModel: ObservableObject {
             }
             .store(in: &cancellables)
     }
+    
+    func filterStations(for line: MetroLine) {
+            self.stations = line.stations
+            resetProgress(keepDestination: false)
+        }
 
     func selectDestination(_ station: Station) {
         selectedDestination = station
@@ -82,6 +89,7 @@ final class MetroTripViewModel: ObservableObject {
             statusText = "sheet.status.chooseDestination".localized
             return
         }
+        
 
         if isChangingDestination {
             guard let baseStation = lastPassedStation ?? startStation else {
@@ -347,15 +355,12 @@ final class MetroTripViewModel: ObservableObject {
     }
 
     private func nearestStation(to location: CLLocation) -> Station? {
-        stations.min { lhs, rhs in
-            let lhsLoc = CLLocation(latitude: lhs.coordinate.latitude,
-                                    longitude: lhs.coordinate.longitude)
-            let rhsLoc = CLLocation(latitude: rhs.coordinate.latitude,
-                                    longitude: rhs.coordinate.longitude)
-            return lhsLoc.distance(from: location) < rhsLoc.distance(from: location)
+            stations.min { lhs, rhs in
+                let lhsLoc = CLLocation(latitude: lhs.coordinate.latitude, longitude: lhs.coordinate.longitude)
+                let rhsLoc = CLLocation(latitude: rhs.coordinate.latitude, longitude: rhs.coordinate.longitude)
+                return lhsLoc.distance(from: location) < rhsLoc.distance(from: location)
+            }
         }
-    }
-
     private func resetProgress(keepDestination: Bool) {
         if !keepDestination {
             selectedDestination = nil

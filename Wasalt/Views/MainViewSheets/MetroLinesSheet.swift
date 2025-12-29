@@ -31,6 +31,7 @@ struct MetroLinesSheet: View {
                 ForEach(MetroLine.allCases) { line in
                     Button {
                         selectedLine = line
+                        metroVM.filterStations(for: line)
                     } label: {
                         HStack {
                             Circle()

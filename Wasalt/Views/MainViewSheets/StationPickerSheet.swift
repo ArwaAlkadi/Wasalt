@@ -9,34 +9,36 @@ import SwiftUI
 import CoreLocation
 
 struct StationSheetView: View {
-    
+
     @Environment(\.colorScheme) var colorScheme
+
     @ObservedObject var metroVM: MetroTripViewModel
     @ObservedObject var permissionsVM: PermissionsViewModel
-    
+
     @Binding var showSheet: Bool
-    
+
     let getCurrentLocation: () -> CLLocation?
-    
-    let stations: [Station] = MetroData.yellowLineStations
-    
+    let line: MetroLine
+
     var body: some View {
         VStack {
             VStack(spacing: metroVM.statusText.isEmpty ? 20 : 7) {
-                
+
+                // MARK: Header
                 Text("sheet.header".localized)
                     .font(.title2.bold())
                     .foregroundColor(.white)
                     .padding(.horizontal, 10)
                     .padding(.top, 20)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                
+
                 // MARK: Status
                 if !metroVM.statusText.isEmpty {
                     HStack(spacing: 3) {
                         Image(systemName: "exclamationmark.triangle")
                             .font(.body.bold())
                             .foregroundColor(.red1)
+
                         Text(metroVM.statusText)
                             .font(.subheadline.bold())
                             .foregroundColor(.red1)
@@ -45,83 +47,77 @@ struct StationSheetView: View {
                     .padding(.horizontal, 10)
                     .padding(.bottom, 10)
                 }
-                
-                // MARK: Stations
-                ZStack {
-                    ScrollView(showsIndicators: false) {
-                        ZStack(alignment: .leading) {
-                            
-                            if UIDevice.current.userInterfaceIdiom == .phone {
-                                Rectangle()
-                                    .fill(Color.yellow)
-                                    .frame(width: 3, height: 680)
-                                    .padding(.leading, 33)
+
+                // MARK: Stations List
+                ScrollView(showsIndicators: false) {
+                    ZStack(alignment: .leading) {
+
+                        // Vertical line
+                        if UIDevice.current.userInterfaceIdiom == .phone {
+                            Rectangle()
+                                .fill(line.color)
+                                .frame(width: 3, height: CGFloat(line.stations.count * 70))
+                                .padding(.leading, 33)
+                        }
+
+                        VStack(spacing: 16) {
+                            ForEach(line.stations) { station in
+                                stationRow(for: station)
                             }
-                            
-                            VStack(spacing: 16) {
-                                ForEach(stations) { station in
-                                    stationRow(for: station)
-                                }
-                                
-                                
-                           }
                         }
                     }
                 }
-                
-                // MARK: Button
-                Button(action: {
-                    
+
+                // MARK: Start Trip Button
+                Button {
                     permissionsVM.refreshPermissions()
-                    
+
                     if !permissionsVM.isLocationAuthorized {
                         permissionsVM.requestLocationPermission()
                         permissionsVM.showLocationSettingsAlert = true
                         return
                     }
-                    
+
                     if !permissionsVM.isNotificationAuthorized {
                         permissionsVM.requestNotificationPermission()
                         return
                     }
-                    
+
                     let location = getCurrentLocation()
                     metroVM.startTrip(userLocation: location)
-                    
+
                     if metroVM.isTracking {
                         showSheet = false
                     }
-                    
-                }) {
+
+                } label: {
                     Text("sheet.startTrip".localized)
                         .font(.title3.bold())
                         .foregroundColor(.white)
                         .frame(width: 200, height: 29)
                         .padding(.vertical, 15)
                         .background(
-                                    metroVM.selectedDestination == nil
-                                    ? Color.clear
-                                    : Color.secondGreen
-                                )
+                            metroVM.selectedDestination == nil
+                            ? Color.clear
+                            : Color.secondGreen
+                        )
                         .cornerRadius(25)
                         .glassEffect(.clear.tint(.black.opacity(0.2)))
                 }
                 .padding(.bottom, 20)
-                
             }
             .padding(.horizontal, 16)
             .background(Color.stationGreen2)
             .cornerRadius(20)
         }
         .ignoresSafeArea(edges: .bottom)
-       
     }
-    
-    
+
     // MARK: - Station Row
-    func stationRow(for station: Station) -> some View {
+    private func stationRow(for station: Station) -> some View {
         ZStack {
             HStack(alignment: .center, spacing: 8) {
+
                 Text(station.name)
                     .font(.body)
                     .foregroundColor(.black)
@@ -136,27 +132,30 @@ struct StationSheetView: View {
                                     .fill(
                                         metroVM.selectedDestination?.id == station.id
                                         ? (colorScheme == .dark
-                                            ? Color.white.opacity(0.4)
-                                            : Color.black.opacity(0.3))
+                                           ? Color.white.opacity(0.4)
+                                           : Color.black.opacity(0.3))
                                         : Color.clear
                                     )
                             )
                     )
                     .contentShape(Rectangle())
-                    .onTapGesture { metroVM.selectDestination(station) }
+                    .onTapGesture {
+                        metroVM.selectDestination(station)
+                    }
             }
             .frame(maxWidth: .infinity)
-            
+
+            // Line + station dots
             Rectangle()
-                .fill(Color.yellow)
+                .fill(line.color)
                 .frame(width: 3)
                 .padding(.trailing, 300)
-            
+
             Circle()
-                .fill(Color.yellow)
+                .fill(line.color)
                 .frame(width: 20, height: 20)
                 .padding(.trailing, 300)
-            
+
             Circle()
                 .fill(Color.white)
                 .frame(width: 8, height: 8)
@@ -171,7 +170,8 @@ struct StationSheetView: View {
             metroVM: MetroTripViewModel(stations: MetroData.yellowLineStations),
             permissionsVM: PermissionsViewModel(),
             showSheet: isPresented,
-            getCurrentLocation: { nil }
+            getCurrentLocation: { nil },
+            line: .line4
         )
     }
 }

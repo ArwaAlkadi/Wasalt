@@ -59,9 +59,9 @@ struct MetroLinesSheet: View {
                     set: { if !$0 { selectedLine = nil } }
                 )
             ) {
-                if let line = selectedLine {
+                if selectedLine != nil {
                     StationSheetView(
-                        metroVM: MetroTripViewModel(stations: line.stations),
+                        metroVM: metroVM,
                         permissionsVM: permissionsVM,
                         showSheet: $showSheet,
                         getCurrentLocation: getCurrentLocation

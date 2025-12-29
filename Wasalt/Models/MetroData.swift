@@ -49,6 +49,9 @@ struct MetroData {
         Station(name: "station.king_fahad_library".localized, order: 12,
                 coordinate: .init(latitude: 24.68969024261919, longitude: 46.6873653489969), minutesToNext: 0),
         
+        Station(name: "station.al_murabba".localized, order: 12,
+                coordinate: .init(latitude: 24.66485076093648, longitude: 46.70244592563306), minutesToNext: 0),
+        
         Station(name: "station.ministry_of_interior".localized, order: 13,
                 coordinate: .init(latitude: 24.67424257882058, longitude: 46.6950479643063), minutesToNext: 0),
         

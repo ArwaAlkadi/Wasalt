@@ -5,8 +5,75 @@
   Created by Arwa Alkadi on 08/12/2025.
   
 */
+/* BLUE LINE (Line 1) */
+"station.sab" = "بنك الأول";
+"station.dr_sulaiman_al_habib" = "د.سليمان الحبيب";
+"station.kafd" = "المركز المالي (كافد)"; // Already exists
+"station.al_murooj" = "المروج";
+"station.king_fahad_district" = "حي الملك فهد";
+"station.king_fahad_district_2" = "حي الملك فهد 2";
+"station.stc" = "STC";
+"station.al_wurud_2" = "الورود 2";
+"station.al_urubah" = "العروبة";
+"station.alinma_bank" = "مصرف الانماء";
+"station.bank_albilad" = "بنك البلاد";
+"station.king_fahad_library" = "مكتبة الملك فهد";
+"station.ministry_of_interior" = "وزارة الداخلية";
+"station.al_murabba" = "المربع";
+"station.passport_department" = "الجوازات";
+"station.national_museum" = "المتحف الوطني"; // Already exists
+"station.al_batha" = "البطحاء";
+"station.qasr_al_hokm" = "قصر الحكم";
+"station.al_oud" = "العود";
+"station.skirinah" = "سكيرينة";
+"station.manfouhah" = "منفوحة";
+"station.al_iman_hospital" = "مستشفى الايمان";
+"station.transportation_center" = "مركز النقل العام";
+"station.al_aziziah" = "العزيزية";
+"station.ad_dar_al_baida" = "الدار البيضاء";
 
-/* Stations */
+/* RED LINE (Line 2) */
+"station.king_saud_university" = "جامعة الملك سعود";
+"station.king_salman_oasis" = "واحة الملك سلمان";
+"station.kacst" = "المدينة التقنية";
+"station.at_takhassussi" = "التخصصي";
+"station.stc" = "STC"; // Already exists
+"station.al_wurud" = "الورود";
+"station.king_abdulaziz_road" = "طريق الملك عبد العزيز";
+"station.ministry_of_education" = "وزارة التعليم"; // Already exists
+"station.an_nuzhah" = "النزهة";
+"station.riyadh_exhibition_center" = "مركز الرياض للمعارض";
+"station.khalid_bin_alwaleed" = "طريق خالد بن الوليد";
+"station.al_hamra" = "الحمراء";
+"station.al_khaleej" = "الخليج";
+"station.ishbiliyah" = "اشبيليا";
+"station.king_fahad_sport_city" = "مدينة الملك فهد الرياضية";
+
+/* ORANGE LINE (Line 3) */
+"station.jeddah_road" = "طريق جده";
+"station.tuwaiq" = "طويق";
+"station.ad_douh" = "الدوح";
+"station.western_station" = "المحطة الغربية";
+"station.aishah_bint_abi_bakr" = "شارع عائشة بنت ابي بكر";
+"station.dhahrat_al_badiah" = "ظهرة البديعة";
+"station.sultanah" = "سلطانة";
+"station.al_jarradiyah" = "الجرادية";
+"station.courts_complex" = "مجمع المحاكم";
+"station.qasr_al_hokm" = "قصر الحكم"; // Already exists
+"station.al_hilla" = "الحلة";
+"station.al_margab" = "المرقب";
+"station.as_salhiyah" = "الصالحية";
+"station.first_industrial_city" = "المدينة الصناعية الأولى";
+"station.railway" = "سكة الحديد";
+"station.al_malaz" = "الملز";
+"station.jarir_district" = "حي جرير";
+"station.al_rajhi_mosque" = "جامع الراجحي";
+"station.harun_ar_rashid_road" = "طريق هارون الرشيد";
+"station.an_naseem" = "النسيم"; // Already exists
+"station.hassan_bin_thabit" = "شارع حسان بن ثابت";
+"station.khashm_al_an" = "خشم العان";
+
+/* YELLOW LINE (Line 4) */
 "station.kafd" = "المركز المالي (كافد)";
 "station.ar_rabi" = "الربيع";
 "station.uthman_bin_affan" = "عثمان بن عفان";
@@ -16,6 +83,31 @@
 "station.airport_t5" = "الصالة 5";
 "station.airport_t3_4" = "الصالة 3-4";
 "station.airport_t1_2" = "الصالة 1-2";
+
+/* GREEN LINE (Line 5) */
+"station.national_museum" = "المتحف الوطني"; // Already exists
+"station.ministry_of_finance" = "وزارة المالية";
+"station.king_abdulaziz_hospital" = "مستشفى الملك عبد العزيز";
+"station.ministry_of_defense" = "وزارة الدفاع";
+"station.al_wizarat" = "الوزارات";
+"station.gosi" = "التأمينات الاجتماعية";
+"station.officers_club" = "نادي الضباط";
+"station.abu_dhabi_square" = "ميدان أبو ظبي";
+"station.ad_dhabab" = "الضباب";
+"station.as_sulimaniyah" = "السليمانية";
+"station.king_salman_park" = "حديقة الملك سلمان";
+"station.ministry_of_education" = "وزارة التعليم"; // Already exists
+
+/* PURPLE LINE (Line 6) */
+"station.granadia" = "غرانطية";
+"station.al_yarmuk" = "اليرموك";
+"station.al_hamra" = "الحمراء"; // Already exists
+"station.al_andalus" = "الأندلس";
+"station.khurais_road" = "طريق خريص";
+"station.as_salam" = "السلام";
+"station.an_naseem" = "النسيم"; // Already exists
+
+
 
 /* General */
 "ok" = "حسناً";
@@ -33,10 +125,13 @@
 "onboarding.subtitle3" = "اختر وجهتك ودع التطبيق يتابع خط سير المترو عنك.";
 
 /* Main Screen */
-"main.chooseDestination" = "اختر محطتك";
+"main.chooseDestination" = "اختر مسارك";
+
+/* Metro Sheet */
+"metroLines.header"="أهلا! 👋🏼 اختر مسارك";
 
 /* Station Sheet */
-"sheet.header" = "أهلاً! 👋🏼 وين ودك تروح؟";
+"sheet.header" = " وين ودك تروح؟";
 "sheet.startTrip" = "ابدأ الرحلة";
 "sheet.status.notNearMetro" = "قرب من خط المترو عشان تقدر تبدأ.";
 "sheet.status.noLocation" = "ما نقدر نبدأ: موقعك غير معروف.";

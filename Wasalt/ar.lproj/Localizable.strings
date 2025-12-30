@@ -128,7 +128,7 @@
 "main.chooseDestination" = "اختر مسارك";
 
 /* Metro Sheet */
-"metroLines.header"="أهلا! 👋🏼 اختر مسارك";
+"metroLines.header"="أهلا! 👋🏼 اختر مسارك:";
 
 /* Station Sheet */
 "sheet.header" = " وين ودك تروح؟";
@@ -173,9 +173,9 @@
 "trip.error.nearestStationNotFound" = "ما قدرنا نحدد أقرب محطة.";
 
 
-"metro.line.blue" = "الخط الأزرق";
-"metro.line.red" = "الخط الأحمر";
-"metro.line.orange" = "الخط البرتقالي";
-"metro.line.yellow" = "الخط الأصفر";
-"metro.line.green" = "الخط الأخضر";
-"metro.line.purple" = "الخط البنفسجي";
+"metro.line.blue" = "المسار الأزرق";
+"metro.line.red" = "المسار الأحمر";
+"metro.line.orange" = "المسار البرتقالي";
+"metro.line.yellow" = "المسار الأصفر";
+"metro.line.green" = "المسار الأخضر";
+"metro.line.purple" = "المسار البنفسجي";

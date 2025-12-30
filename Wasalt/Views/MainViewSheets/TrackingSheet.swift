@@ -10,7 +10,7 @@ import CoreLocation
 
 struct TrackingSheet: View {
     
-    @Binding var ShowStationSheet: Bool
+    @Binding var showLineSheet: Bool
     @Binding var isPresented: Bool
     @Environment(\.colorScheme) var scheme
     @ObservedObject var metroVM: MetroTripViewModel
@@ -173,7 +173,7 @@ struct TrackingSheet: View {
                     Button(action: {
                         metroVM.cancelAndChooseAgain()
                         isPresented = false
-                        ShowStationSheet = true
+                        showLineSheet = true
                     }) {
                         Text("tracking.change".localized)
                             .font(.body.bold())
@@ -214,7 +214,7 @@ struct TrackingSheet: View {
     mockVM.etaMinutes = 14
     
     return TrackingSheet(
-        ShowStationSheet: .constant(false),
+        showLineSheet: .constant(false),
         isPresented: .constant(true),
         metroVM: mockVM
     )

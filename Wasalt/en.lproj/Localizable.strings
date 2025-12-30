@@ -126,7 +126,7 @@
 "onboarding.subtitle3" = "Choose your destination and let the app track your metro route.";
 
 /* Main Screen */
-"main.chooseDestination" = "Choose a Line";
+"main.chooseDestination" = "Choose a Line:";
 
 /* Metro Sheet */
 "metroLines.header"="Hello!👋🏼 Choose a Line";

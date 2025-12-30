@@ -98,11 +98,11 @@ struct MainView: View {
         // MARK: - Tracking & Arrival Sheets (unchanged)
         .sheet(isPresented: $showTrackingSheet) {
             TrackingSheet(
-                ShowStationSheet: $showStationSheet,
+                showLineSheet: $showLineSheet,
                 isPresented: $showTrackingSheet,
                 metroVM: metroVM
             )
-            .presentationDetents([.height(460), .height(550)])
+            .presentationDetents([.height(460), .large])
             .presentationDragIndicator(.hidden)
             .interactiveDismissDisabled(true)
             .presentationBackgroundInteraction(.enabled)

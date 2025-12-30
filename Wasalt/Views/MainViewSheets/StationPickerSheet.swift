@@ -11,7 +11,8 @@ import CoreLocation
 struct StationSheetView: View {
 
     @Environment(\.colorScheme) var colorScheme
-
+    @Environment(\.dismiss) private var dismiss
+    
     @ObservedObject var metroVM: MetroTripViewModel
     @ObservedObject var permissionsVM: PermissionsViewModel
 
@@ -25,12 +26,26 @@ struct StationSheetView: View {
             VStack(spacing: metroVM.statusText.isEmpty ? 20 : 7) {
 
                 // MARK: Header
-                Text("sheet.header".localized)
-                    .font(.title2.bold())
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 10)
-                    .padding(.top, 20)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                HStack {
+                   
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "chevron.right")
+                            .font(.title2.bold())
+                            .foregroundColor(.white)
+                    }
+
+                    Text("sheet.header".localized)
+                        .font(.title2.bold())
+                        .foregroundColor(.white)
+                        
+                    Spacer()
+                }
+                .padding(.horizontal, 10)
+                .padding(.top, 20)
+               
+               
 
                 // MARK: Status
                 if !metroVM.statusText.isEmpty {
@@ -56,8 +71,8 @@ struct StationSheetView: View {
                         if UIDevice.current.userInterfaceIdiom == .phone {
                             Rectangle()
                                 .fill(line.color)
-                                .frame(width: 3, height: CGFloat(line.stations.count * 70))
-                                .padding(.leading, 33)
+                                .frame(width: 3, height: CGFloat(line.stations.count * 80))
+                                .padding(.leading, 33.3)
                         }
 
                         VStack(spacing: 16) {
@@ -111,6 +126,7 @@ struct StationSheetView: View {
             .cornerRadius(20)
         }
         .ignoresSafeArea(edges: .bottom)
+        .navigationBarBackButtonHidden(true)
     }
 
     // MARK: - Station Row

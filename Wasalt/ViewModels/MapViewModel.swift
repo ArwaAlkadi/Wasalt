@@ -26,17 +26,17 @@ class MapViewModel: ObservableObject {
         .uniqueByCoordinate()
 
 
-    // All lines
+    /// All lines
     @Published var allRoutePolylines: [(line: MetroLine, points: [MKMapPoint])] = []
 
-    // Selected line (Yellow line by default)
+    /// Selected line (Yellow line by default)
     @Published var selectedLineName: String? = "Yellow line"
 
     init() {
         loadBundledMetroGeoJSON()
     }
 
-    // MARK: Load GeoJSON
+    // MARK: - Load GeoJSON
     func loadBundledMetroGeoJSON() {
         guard let url = Bundle.main.url(forResource: "metro_lines", withExtension: "geojson"),
               let data = try? Data(contentsOf: url) else { return }
@@ -74,7 +74,7 @@ class MapViewModel: ObservableObject {
         }
     }
 
-    // MARK: Convert MKPolyline to smooth points
+    // MARK: - Convert MKPolyline to smooth points
     private func convertPolylineToPoints(_ polyline: MKPolyline) -> [MKMapPoint] {
         var pts: [MKMapPoint] = []
         let p = polyline.points()
@@ -82,7 +82,7 @@ class MapViewModel: ObservableObject {
             pts.append(p[i])
         }
 
-        // Insert PNU, KAFD in the correct place
+        /// Insert PNU, KAFD in the correct place
         pts = insertStationsIntoPolyline(pts)
 
         return pts
@@ -96,7 +96,7 @@ class MapViewModel: ObservableObject {
         for station in stations {
             let stationPoint = MKMapPoint(station.coordinate)
 
-            // Find nearest segment
+            /// Find nearest segment
             var bestIndex = 0
             var bestDistance = Double.greatestFiniteMagnitude
 
@@ -104,7 +104,7 @@ class MapViewModel: ObservableObject {
                 let a = result[i]
                 let b = result[i+1]
 
-                // midpoint of segment
+                /// midpoint of segment
                 let mid = MKMapPoint(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2)
                 let d = hypot(mid.x - stationPoint.x, mid.y - stationPoint.y)
 
@@ -114,7 +114,7 @@ class MapViewModel: ObservableObject {
                 }
             }
 
-            // Only insert if station is close enough (200m)
+            /// Only insert if station is close enough (200m)
             if bestDistance < 200 {
                 result.insert(stationPoint, at: bestIndex)
             }
@@ -125,7 +125,7 @@ class MapViewModel: ObservableObject {
 
 
 
-    // MARK: Linear interpolation
+    // MARK: - Linear interpolation
     func interpolatePolyline(_ points: [MKMapPoint], step: Double = 100) -> [MKMapPoint] {
         var smoothPoints: [MKMapPoint] = []
         for i in 0..<points.count-1 {
@@ -146,7 +146,7 @@ class MapViewModel: ObservableObject {
         return smoothPoints
     }
 
-    // MARK: Catmull-Rom spline for smooth curves
+    // MARK: - Catmull-Rom spline for smooth curves
     func catmullRomSpline(points: [MKMapPoint], samples: Int = 10) -> [MKMapPoint] {
         guard points.count > 3 else { return points }
         var result: [MKMapPoint] = []
@@ -176,7 +176,7 @@ class MapViewModel: ObservableObject {
             }
         }
 
-        // append last points to finish the line
+        /// append last points to finish the line
         result.append(contentsOf: points.suffix(2))
         return result
     }
@@ -188,7 +188,7 @@ class MapViewModel: ObservableObject {
           return loc1.distance(from: loc2)
       }
       
-      // Travel time in minutes given speed in km/h
+      /// Travel time in minutes given speed in km/h
       func minutesBetweenStations(_ from: Station, _ to: Station, speedKmh: Double = 30) -> Int {
           let distanceMeters = distanceBetweenStations(from, to)
           let distanceKm = distanceMeters / 1000
@@ -196,7 +196,7 @@ class MapViewModel: ObservableObject {
           return Int(timeHours * 60)
       }
 
-      // Optional: cumulative travel times along a line
+      /// Optional: cumulative travel times along a line
       func cumulativeTravelTimes(for lineStations: [Station], speedKmh: Double = 30) -> [String: Int] {
           var times: [String: Int] = [:]
           var cumulative = 0

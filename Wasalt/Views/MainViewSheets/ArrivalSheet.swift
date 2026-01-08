@@ -80,7 +80,6 @@ struct ArrivedSheet: View {
     }
 }
 
-
 #Preview {
     StatefulPreviewWrapper(false) { value in
         ArrivedSheet(isPresented: value)

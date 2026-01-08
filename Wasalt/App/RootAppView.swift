@@ -5,18 +5,19 @@
 //  Created by Arwa Alkadi on 19/11/2025.
 //
 
-// كود يحدد من وين يبدأ التطبيق، بناءً على حالة المستخدم
+// Determines where the app starts based on the user’s state
 
 import SwiftUI
 
 struct RootAppView: View {
-    
-    // يظهر السبلاش أول مرة فقط
+
+    /// Shows the splash screen only the first time
     @State private var showSplash: Bool = true
-    
-    // نحفظ هل خلص الأونبوردنق ولا لا
-    @AppStorage("didFinishOnboarding") var didFinishOnboarding: Bool = false
-    
+
+    /// Stores whether onboarding has been completed
+    @AppStorage("didFinishOnboarding")
+    var didFinishOnboarding: Bool = false
+
     var body: some View {
         ZStack {
             if showSplash {
@@ -30,7 +31,7 @@ struct RootAppView: View {
             }
         }
         .onAppear {
-            // مدة السبلاش
+            // Splash duration
             DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
                 withAnimation(.easeInOut) {
                     showSplash = false

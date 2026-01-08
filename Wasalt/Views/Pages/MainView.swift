@@ -5,31 +5,31 @@ import _MapKit_SwiftUI
 struct MainView: View {
 
     @StateObject var vm = MapViewModel()
-
     @StateObject private var locationManager: LocationManager
     @StateObject private var metroVM: MetroTripViewModel
-
     @StateObject private var permissionsVM = PermissionsViewModel()
     @StateObject private var alertManager = InAppAlertManager()
 
-    @State private var showLineSheet: Bool = false // <-- New
+    @State private var showLineSheet: Bool = false
     @State private var showTrackingSheet: Bool = false
     @State private var showArrivalSheet: Bool = false
     @State private var showStationSheet: Bool = false
 
     @Environment(\.colorScheme) var scheme
 
+    // MARK: - Init
     init() {
         let lm = LocationManager()
         _locationManager = StateObject(wrappedValue: lm)
         _metroVM = StateObject(wrappedValue: MetroTripViewModel(
-            stations: MetroData.yellowLineStations,
+            stations: MetroData.allStations,
             locationManager: lm
         ))
     }
 
     var body: some View {
         ZStack {
+
             // MARK: - Map
             Map(position: $vm.mapCamera) {
                 UserAnnotation()
@@ -81,6 +81,7 @@ struct MainView: View {
             }
             .padding(.horizontal)
         }
+
         // MARK: - Metro Lines Sheet
         .sheet(isPresented: $showLineSheet) {
             MetroLinesSheet(
@@ -95,7 +96,7 @@ struct MainView: View {
             .presentationBackgroundInteraction(.enabled)
         }
 
-        // MARK: - Tracking & Arrival Sheets (unchanged)
+        // MARK: - Tracking Sheet
         .sheet(isPresented: $showTrackingSheet) {
             TrackingSheet(
                 showLineSheet: $showLineSheet,
@@ -108,6 +109,7 @@ struct MainView: View {
             .presentationBackgroundInteraction(.enabled)
         }
 
+        // MARK: - Arrival Sheet
         .sheet(isPresented: $showArrivalSheet) {
             ArrivedSheet(isPresented: $showArrivalSheet)
                 .presentationDetents([.height(500), .height(500)])
@@ -123,11 +125,11 @@ struct MainView: View {
             locationManager.start()
         }
 
-        .onChange(of: locationManager.userLocation) { newLoc in
+        .onChange(of: locationManager.userLocation) { _, newLoc in
             metroVM.userLocationUpdated(newLoc)
         }
 
-        .onChange(of: metroVM.isTracking) { isTracking in
+        .onChange(of: metroVM.isTracking) { _, isTracking in
             showTrackingSheet = isTracking
 
             if isTracking,
@@ -137,7 +139,7 @@ struct MainView: View {
                 locationManager.startTripGeofences(
                     start: start,
                     destination: dest,
-                    allStations: MetroData.yellowLineStations
+                    allStations: metroVM.stations /// Use current line stations
                 )
 
             } else {
@@ -145,35 +147,44 @@ struct MainView: View {
             }
         }
 
-        .onChange(of: metroVM.showArrivalSheet) { arrived in
+        .onChange(of: metroVM.showArrivalSheet) { _, arrived in
             if arrived {
                 showTrackingSheet = false
                 showArrivalSheet = true
             }
         }
 
-        .onChange(of: locationManager.wrongDirectionTriggered) { fired in
+        .onChange(of: locationManager.wrongDirectionTriggered) { _, fired in
             guard fired else { return }
             metroVM.activeAlert = .wrongDirection
             locationManager.wrongDirectionTriggered = false
         }
 
-        .onChange(of: metroVM.activeAlert) { alert in
+        .onChange(of: metroVM.activeAlert) { _, alert in
             guard let alert = alert else { return }
 
             switch alert {
             case .approaching(let name, _):
                 let message = String(format: "alert.approaching".localized, name)
                 alertManager.showApproaching(message: message)
+
             case .arrival(let name):
                 let message = String(format: "alert.arrived".localized, name)
                 alertManager.showArrival(message: message)
+
             case .wrongDirection:
-                let terminal = metroVM.correctTerminalName ?? ""
-                let msg = terminal.isEmpty
-                    ? "alert.wrongDirection.body.noTerminal".localized
-                    : String(format: "alert.wrongDirection.body.withTerminal".localized, terminal)
-                alertManager.showWrongDirection(message: msg)
+                if let terminalStation = metroVM.correctTerminalStation {
+                    let cleanTerminalName = terminalStation.cleanName
+                    let msg = String(
+                        format: "alert.wrongDirection.body.withTerminal".localized,
+                        cleanTerminalName
+                    )
+                    alertManager.showWrongDirection(message: msg)
+                } else {
+                    alertManager.showWrongDirection(
+                        message: "alert.wrongDirection.body.noTerminal".localized
+                    )
+                }
             }
 
             DispatchQueue.main.async {
@@ -181,7 +192,6 @@ struct MainView: View {
             }
         }
 
-        //  هنا UI تعرف إن الرحلة انتهت وتسكر TrackingSheet
         .onReceive(locationManager.$tripExpired) { expired in
             guard expired else { return }
 
@@ -193,7 +203,7 @@ struct MainView: View {
 
             locationManager.tripExpired = false
         }
-
+        
         // MARK: - Permission Alerts
         .alert("permission.location.title".localized,
                isPresented: $permissionsVM.showLocationSettingsAlert) {
@@ -224,11 +234,14 @@ struct MainView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 25, height: 25)
+
                 Text(alertManager.bannerMessage)
                     .font(.subheadline.bold())
                     .foregroundStyle(.whiteBlack)
             }
+
             Spacer()
+
             Button {
                 alertManager.dismiss()
             } label: {
@@ -247,12 +260,10 @@ struct MainView: View {
         switch alertManager.bannerType {
         case .arrival:
             return scheme == .dark ? "ArrivedDark" : "ArrivedLight"
-
         case .approaching:
             return scheme == .dark ? "NearbyDark" : "NearbyLight"
-
         case .wrongDirection:
-            return scheme == .dark ?  "warning" : "warning-2"
+            return scheme == .dark ? "warning" : "warning-2"
         }
     }
 
@@ -265,7 +276,6 @@ struct MainView: View {
         return .gray
     }
 }
-
 
 #Preview {
     MainView()

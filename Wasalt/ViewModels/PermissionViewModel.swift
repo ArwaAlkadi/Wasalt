@@ -5,42 +5,42 @@
 //  Created by Arwa Alkadi on 19/11/2025.
 //
 
-// أذونات ومنطق الإشعارات والموقع
+// Permissions and logic for notifications and location
 
 import MapKit
 import Combine
 import UserNotifications
 
-//MARK: -PermissionsViewModel → Handles all permission–related logic required for the app to function safely.
+// MARK: - PermissionsViewModel → Handles all permission-related logic required for the app.
 final class PermissionsViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
-    
+
     @Published var isLocationAuthorized: Bool = false
     @Published var isNotificationAuthorized: Bool = false
-    
+
     @Published var showLocationSettingsAlert: Bool = false
     @Published var showNotificationSettingsAlert: Bool = false
-    
+
     private let locationManager = CLLocationManager()
-    
+
     override init() {
         super.init()
         locationManager.delegate = self
         checkLocationAuthorizationStatus()
         checkNotificationAuthorizationStatus()
     }
-    
+
     var areAllPermissionsGranted: Bool {
         isLocationAuthorized && isNotificationAuthorized
     }
-    
+
     func refreshPermissions() {
         checkLocationAuthorizationStatus()
         checkNotificationAuthorizationStatus()
     }
-    
-    // MARK: Location
+
+    // MARK: - Location
     func checkLocationAuthorizationStatus() {
-        let status = CLLocationManager.authorizationStatus()
+        let status = locationManager.authorizationStatus
         switch status {
         case .authorizedAlways, .authorizedWhenInUse:
             isLocationAuthorized = true
@@ -50,16 +50,16 @@ final class PermissionsViewModel: NSObject, ObservableObject, CLLocationManagerD
             isLocationAuthorized = false
         }
     }
-    
+
     func requestLocationPermission() {
         locationManager.requestWhenInUseAuthorization()
     }
-    
+
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         checkLocationAuthorizationStatus()
     }
-    
-    // MARK: Notifications
+
+    // MARK: - Notifications
     func checkNotificationAuthorizationStatus() {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             DispatchQueue.main.async {
@@ -74,20 +74,20 @@ final class PermissionsViewModel: NSObject, ObservableObject, CLLocationManagerD
             }
         }
     }
-    
+
     func requestNotificationPermission() {
         UNUserNotificationCenter.current()
             .requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
                 DispatchQueue.main.async {
                     self.isNotificationAuthorized = granted
-                    
+
                     if !granted {
                         self.showNotificationSettingsAlert = true
                     }
                 }
             }
     }
-    
+
     func openAppSettings() {
         guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
         if UIApplication.shared.canOpenURL(url) {

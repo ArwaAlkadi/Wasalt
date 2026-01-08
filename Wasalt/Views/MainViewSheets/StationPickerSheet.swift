@@ -12,7 +12,7 @@ struct StationSheetView: View {
 
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.dismiss) private var dismiss
-    
+
     @ObservedObject var metroVM: MetroTripViewModel
     @ObservedObject var permissionsVM: PermissionsViewModel
 
@@ -25,49 +25,49 @@ struct StationSheetView: View {
         VStack {
             VStack(spacing: metroVM.statusText.isEmpty ? 20 : 7) {
 
-                // MARK: Header
+                // MARK: - Header
                 HStack {
-                   
                     Button {
                         dismiss()
                     } label: {
-                        Image(systemName: "chevron.right")
-                            .font(.title2.bold())
-                            .foregroundColor(.white)
+                        Image(
+                            systemName: Locale.current.language.languageCode?.identifier == "ar"
+                            ? "chevron.right"
+                            : "chevron.left"
+                        )
+                        .font(.title2.bold())
+                        .foregroundColor(.white)
                     }
 
                     Text("sheet.header".localized)
                         .font(.title2.bold())
                         .foregroundColor(.white)
-                        
+
                     Spacer()
                 }
                 .padding(.horizontal, 10)
                 .padding(.top, 20)
-               
-               
 
-                // MARK: Status
                 if !metroVM.statusText.isEmpty {
-                    HStack(spacing: 3) {
+                    HStack(alignment: .top, spacing: 6) {
                         Image(systemName: "exclamationmark.triangle")
                             .font(.body.bold())
-                            .foregroundColor(.red1)
+                            .foregroundColor(colorScheme == .dark ? .red1 : .yellow)
+                            .imageScale(.medium)
 
                         Text(metroVM.statusText)
                             .font(.subheadline.bold())
-                            .foregroundColor(.red1)
+                            .foregroundColor(colorScheme == .dark ? .red1 : .yellow)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 10)
                     .padding(.bottom, 10)
                 }
 
-                // MARK: Stations List
+                // MARK: - Stations List
                 ScrollView(showsIndicators: false) {
                     ZStack(alignment: .leading) {
 
-                        // Vertical line
                         if UIDevice.current.userInterfaceIdiom == .phone {
                             Rectangle()
                                 .fill(line.color)
@@ -83,7 +83,7 @@ struct StationSheetView: View {
                     }
                 }
 
-                // MARK: Start Trip Button
+                // MARK: - Start Trip Button
                 Button {
                     permissionsVM.refreshPermissions()
 
@@ -134,34 +134,63 @@ struct StationSheetView: View {
         ZStack {
             HStack(alignment: .center, spacing: 8) {
 
-                Text(station.name)
-                    .font(.body)
-                    .foregroundColor(.black)
-                    .frame(width: 310, height: 40, alignment: .leading)
-                    .padding(.vertical, 15)
-                    .padding(.leading, 60)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.stationGreen1)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(
-                                        metroVM.selectedDestination?.id == station.id
-                                        ? (colorScheme == .dark
-                                           ? Color.white.opacity(0.4)
-                                           : Color.black.opacity(0.3))
-                                        : Color.clear
-                                    )
-                            )
-                    )
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        metroVM.selectDestination(station)
+                HStack(spacing: 6) {
+
+                    Text(station.name)
+                        .font(.body)
+                        .foregroundColor(.black)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+
+                    /// Transform circles
+                    if station.isTransferStation, let lines = station.transferLines {
+
+                        HStack(spacing: 2) {
+                            Image(systemName: "arrow.trianglehead.2.clockwise")
+                                .font(.footnote)
+                                .foregroundStyle(.black)
+
+                            ForEach(lines, id: \.self) { transferLine in
+                                Image(systemName: "circlebadge.fill")
+                                    .foregroundStyle(transferLine.color)
+                                    .font(.body.bold())
+                                    .padding(.horizontal, 0.5)
+                            }
+                        }
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .background(
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(Color.gray.opacity(0.5))
+                        )
                     }
+
+                    Spacer()
+                }
+                .frame(width: 310, height: 40, alignment: .leading)
+                .padding(.vertical, 15)
+                .padding(.leading, 60)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.stationGreen1)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(
+                                    metroVM.selectedDestination?.order == station.order
+                                    ? (colorScheme == .dark
+                                       ? Color.white.opacity(0.4)
+                                       : Color.black.opacity(0.3))
+                                    : Color.clear
+                                )
+                        )
+                )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    metroVM.selectDestination(station)
+                }
             }
             .frame(maxWidth: .infinity)
 
-            // Line + station dots
             Rectangle()
                 .fill(line.color)
                 .frame(width: 3)
@@ -187,7 +216,7 @@ struct StationSheetView: View {
             permissionsVM: PermissionsViewModel(),
             showSheet: isPresented,
             getCurrentLocation: { nil },
-            line: .line4
+            line: .blue
         )
     }
 }

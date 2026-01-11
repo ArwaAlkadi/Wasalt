@@ -108,6 +108,7 @@
 // MARK: - General
 "ok" = "حسناً";
 "cancel" = "إلغاء";
+"common.and" = "و";
 
 // MARK: - Onboarding
 "onboarding.skip" = "تخطي";
@@ -134,6 +135,7 @@
 "sheet.status.noLocation" = "موقعك غير متوفر";
 "sheet.status.chooseDestination" = "اختر محطتك أولاً";
 "status.alreadyAtDestination" = "أنت بالفعل عند أقرب محطة لك %@";
+"station.transfer.message" = "تقدر تحول من هنا إلى %@";
 "lineSupport.notice" = "حالياً ندعم مسار واحد";
 "common.or" = "أو";
 
@@ -178,3 +180,4 @@
 "metro.line.yellow" = "المسار الأصفر";
 "metro.line.green" = "المسار الأخضر";
 "metro.line.purple" = "المسار البنفسجي";
+

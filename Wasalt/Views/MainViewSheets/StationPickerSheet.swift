@@ -20,6 +20,9 @@ struct StationSheetView: View {
 
     let getCurrentLocation: () -> CLLocation?
     let line: MetroLine
+    
+    @State private var showingTransferPopover: Bool = false
+    @State private var selectedTransferStation: Station? = nil
 
     var body: some View {
         VStack {
@@ -142,27 +145,54 @@ struct StationSheetView: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
 
-                    /// Transform circles
+                    /// Transfer Info Button
                     if station.isTransferStation, let lines = station.transferLines {
-
-                        HStack(spacing: 2) {
-                            Image(systemName: "arrow.trianglehead.2.clockwise")
+                        Button {
+                            selectedTransferStation = station
+                            showingTransferPopover = true
+                        } label: {
+                            Image(systemName: "lightbulb.fill")
                                 .font(.footnote)
-                                .foregroundStyle(.black)
-
-                            ForEach(lines, id: \.self) { transferLine in
-                                Image(systemName: "circlebadge.fill")
-                                    .foregroundStyle(transferLine.color)
-                                    .font(.body.bold())
-                                    .padding(.horizontal, 0.5)
-                            }
+                                .foregroundStyle(Color.white.opacity(0.9))
+                                .padding(8)
+                                .background(
+                                    Circle()
+                                        .fill(Color.gray.opacity(0.5))
+                                )
                         }
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
-                        .background(
-                            RoundedRectangle(cornerRadius: 20)
-                                .fill(Color.gray.opacity(0.5))
-                        )
+                        .buttonStyle(.plain)
+                        .popover(isPresented: Binding(
+                            get: { showingTransferPopover && selectedTransferStation?.order == station.order },
+                            set: { if !$0 { showingTransferPopover = false } }
+                        )) {
+                            VStack(spacing: 10) {
+                                Text(String(format: "station.transfer.message".localized, lines.map { $0.displayName }.joined(separator: " \("common.and".localized) ")))
+                                    .font(.caption)
+                                    .foregroundColor(.primary)
+                                    .multilineTextAlignment(.center)
+                                
+                                HStack(spacing: 4) {
+                                    Image(systemName: "arrow.trianglehead.2.clockwise")
+                                        .font(.caption.bold())
+                                        .foregroundStyle(.primary)
+                                    
+                                    ForEach(lines, id: \.self) { transferLine in
+                                        Image(systemName: "circlebadge.fill")
+                                            .foregroundStyle(transferLine.color)
+                                            .font(.callout)
+                                    }
+                                }
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(Color.gray.opacity(0.4))
+                                )
+                            }
+                            .padding(12)
+                            .presentationCompactAdaptation(.popover)
+                            .frame(width: 250)
+                        }
                     }
 
                     Spacer()

@@ -108,6 +108,7 @@
 // MARK: - General
 "ok" = "OK";
 "cancel" = "Cancel";
+"common.and" = "and";
 
 // MARK: - Onboarding
 "onboarding.skip" = "Skip";
@@ -134,6 +135,7 @@
 "sheet.status.noLocation" = "Location is unavailable";
 "sheet.status.chooseDestination" = "Please select a station first";
 "status.alreadyAtDestination" = "You are already at your nearest station %@";
+"station.transfer.message" = "You can transfer here to %@";
 "lineSupport.notice" = "Currently only one line is supported";
 "common.or" = "or";
 
@@ -178,3 +180,4 @@
 "metro.line.yellow" = "Yellow Line";
 "metro.line.green" = "Green Line";
 "metro.line.purple" = "Purple Line";
+

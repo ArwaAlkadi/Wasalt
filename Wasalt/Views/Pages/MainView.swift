@@ -5,24 +5,24 @@ import _MapKit_SwiftUI
 struct MainView: View {
 
     @StateObject var vm = MapViewModel()
-
     @StateObject private var locationManager: LocationManager
     @StateObject private var metroVM: MetroTripViewModel
-
     @StateObject private var permissionsVM = PermissionsViewModel()
     @StateObject private var alertManager = InAppAlertManager()
 
-    @State private var showStationSheet: Bool  = false
+    @State private var showLineSheet: Bool = false
     @State private var showTrackingSheet: Bool = false
-    @State private var showArrivalSheet: Bool  = false
+    @State private var showArrivalSheet: Bool = false
+    @State private var showStationSheet: Bool = false
 
     @Environment(\.colorScheme) var scheme
 
+    // MARK: - Init
     init() {
         let lm = LocationManager()
         _locationManager = StateObject(wrappedValue: lm)
         _metroVM = StateObject(wrappedValue: MetroTripViewModel(
-            stations: MetroData.yellowLineStations,
+            stations: MetroData.allStations,
             locationManager: lm
         ))
     }
@@ -32,15 +32,12 @@ struct MainView: View {
 
             // MARK: - Map
             Map(position: $vm.mapCamera) {
-
                 UserAnnotation()
 
                 ForEach(vm.allRoutePolylines.indices, id: \.self) { index in
                     let route = vm.allRoutePolylines[index]
-
                     MapPolyline(points: route.points)
                         .stroke(route.line.color, lineWidth: 4)
-
                 }
 
                 ForEach(vm.stations) { station in
@@ -49,15 +46,12 @@ struct MainView: View {
                             Circle()
                                 .fill(stationLineColor(station))
                                 .frame(width: 18, height: 18)
-
                             Circle()
                                 .fill(.white)
                                 .frame(width: 7, height: 7)
                         }
                     }
                 }
-                
-
             }
             .ignoresSafeArea()
 
@@ -70,8 +64,9 @@ struct MainView: View {
 
                 Spacer()
 
+                // MARK: - Choose Line Button
                 Button {
-                    showStationSheet = true
+                    showLineSheet = true
                 } label: {
                     Text("main.chooseDestination".localized)
                         .font(.title3.bold())
@@ -87,12 +82,13 @@ struct MainView: View {
             .padding(.horizontal)
         }
 
-        // MARK: - Station Sheet
-        .sheet(isPresented: $showStationSheet) {
-            StationSheetView(
+        // MARK: - Metro Lines Sheet
+        .sheet(isPresented: $showLineSheet) {
+            MetroLinesSheet(
+                showSheet: $showLineSheet,
+                showTrackingSheet: $showTrackingSheet,
                 metroVM: metroVM,
                 permissionsVM: permissionsVM,
-                showSheet: $showStationSheet,
                 getCurrentLocation: { locationManager.userLocation }
             )
             .presentationDetents([.height(400), .large])
@@ -103,11 +99,11 @@ struct MainView: View {
         // MARK: - Tracking Sheet
         .sheet(isPresented: $showTrackingSheet) {
             TrackingSheet(
-                ShowStationSheet: $showStationSheet,
+                showLineSheet: $showLineSheet,
                 isPresented: $showTrackingSheet,
                 metroVM: metroVM
             )
-            .presentationDetents([.height(460), .height(550)])
+            .presentationDetents([.height(460), .large])
             .presentationDragIndicator(.hidden)
             .interactiveDismissDisabled(true)
             .presentationBackgroundInteraction(.enabled)
@@ -129,11 +125,11 @@ struct MainView: View {
             locationManager.start()
         }
 
-        .onChange(of: locationManager.userLocation) { newLoc in
+        .onChange(of: locationManager.userLocation) { _, newLoc in
             metroVM.userLocationUpdated(newLoc)
         }
 
-        .onChange(of: metroVM.isTracking) { isTracking in
+        .onChange(of: metroVM.isTracking) { _, isTracking in
             showTrackingSheet = isTracking
 
             if isTracking,
@@ -143,7 +139,7 @@ struct MainView: View {
                 locationManager.startTripGeofences(
                     start: start,
                     destination: dest,
-                    allStations: MetroData.yellowLineStations
+                    allStations: metroVM.stations /// Use current line stations
                 )
 
             } else {
@@ -151,20 +147,20 @@ struct MainView: View {
             }
         }
 
-        .onChange(of: metroVM.showArrivalSheet) { arrived in
+        .onChange(of: metroVM.showArrivalSheet) { _, arrived in
             if arrived {
                 showTrackingSheet = false
                 showArrivalSheet = true
             }
         }
 
-        .onChange(of: locationManager.wrongDirectionTriggered) { fired in
+        .onChange(of: locationManager.wrongDirectionTriggered) { _, fired in
             guard fired else { return }
             metroVM.activeAlert = .wrongDirection
             locationManager.wrongDirectionTriggered = false
         }
 
-        .onChange(of: metroVM.activeAlert) { alert in
+        .onChange(of: metroVM.activeAlert) { _, alert in
             guard let alert = alert else { return }
 
             switch alert {
@@ -177,16 +173,18 @@ struct MainView: View {
                 alertManager.showArrival(message: message)
 
             case .wrongDirection:
-                let terminal = metroVM.correctTerminalName ?? ""
-
-                let msg = terminal.isEmpty
-                ? "alert.wrongDirection.body.noTerminal".localized
-                : String(
-                    format: "alert.wrongDirection.body.withTerminal".localized,
-                    terminal
-                )
-
-                alertManager.showWrongDirection(message: msg)
+                if let terminalStation = metroVM.correctTerminalStation {
+                    let cleanTerminalName = terminalStation.cleanName
+                    let msg = String(
+                        format: "alert.wrongDirection.body.withTerminal".localized,
+                        cleanTerminalName
+                    )
+                    alertManager.showWrongDirection(message: msg)
+                } else {
+                    alertManager.showWrongDirection(
+                        message: "alert.wrongDirection.body.noTerminal".localized
+                    )
+                }
             }
 
             DispatchQueue.main.async {
@@ -194,7 +192,6 @@ struct MainView: View {
             }
         }
 
-        //  هنا UI تعرف إن الرحلة انتهت وتسكر TrackingSheet
         .onReceive(locationManager.$tripExpired) { expired in
             guard expired else { return }
 
@@ -206,7 +203,7 @@ struct MainView: View {
 
             locationManager.tripExpired = false
         }
-
+        
         // MARK: - Permission Alerts
         .alert("permission.location.title".localized,
                isPresented: $permissionsVM.showLocationSettingsAlert) {
@@ -263,15 +260,13 @@ struct MainView: View {
         switch alertManager.bannerType {
         case .arrival:
             return scheme == .dark ? "ArrivedDark" : "ArrivedLight"
-
         case .approaching:
             return scheme == .dark ? "NearbyDark" : "NearbyLight"
-
         case .wrongDirection:
-            return scheme == .dark ?  "warning" : "warning-2"
+            return scheme == .dark ? "warning" : "warning-2"
         }
     }
-    
+
     func stationLineColor(_ station: Station) -> Color {
         for line in MetroLine.allCases {
             if line.stations.contains(where: { $0.id == station.id }) {
@@ -280,7 +275,6 @@ struct MainView: View {
         }
         return .gray
     }
-
 }
 
 #Preview {

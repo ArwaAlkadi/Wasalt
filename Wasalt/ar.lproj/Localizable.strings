@@ -1,78 +1,183 @@
-/* 
-  Localizable.strings
+/*
+  Localizable.strings (Arabic)
   Wasalt
 
   Created by Arwa Alkadi on 08/12/2025.
   
 */
 
-/* Stations */
-"station.kafd" = "المركز المالي (كافد)";
+// MARK: - SHARED STATIONS (Used in multiple lines)
+"station.kafd" = "المركز المالي - كافد";
+"station.stc" = "STC";
+"station.national_museum" = "المتحف الوطني";
+"station.qasr_al_hokm" = "قصر الحكم";
+"station.ministry_of_education" = "وزارة التعليم";
+"station.an_naseem" = "النسيم";
 "station.ar_rabi" = "الربيع";
 "station.uthman_bin_affan" = "عثمان بن عفان";
 "station.sabic" = "سابك";
+"station.al_hamra" = "الحمراء";
+
+// MARK: - Stations
+
+/* BLUE LINE (Line 1) */
+"station.sab" = "بنك الأول";
+"station.dr_sulaiman_al_habib" = "د.سليمان الحبيب";
+"station.al_murooj" = "المروج";
+"station.king_fahad_district" = "حي الملك فهد";
+"station.king_fahad_district_2" = "حي الملك فهد 2";
+"station.al_wurud_2" = "الورود 2";
+"station.al_urubah" = "العروبة";
+"station.alinma_bank" = "مصرف الإنماء";
+"station.bank_albilad" = "بنك البلاد";
+"station.king_fahad_library" = "مكتبة الملك فهد";
+"station.ministry_of_interior" = "وزارة الداخلية";
+"station.al_murabba" = "المربع";
+"station.passport_department" = "الجوازات";
+"station.al_batha" = "البطحاء";
+"station.al_oud" = "العود";
+"station.skirinah" = "سكيرينة";
+"station.manfouhah" = "منفوحة";
+"station.al_iman_hospital" = "مستشفى الإيمان";
+"station.transportation_center" = "مركز النقل العام";
+"station.al_aziziah" = "العزيزية";
+"station.ad_dar_al_baida" = "الدار البيضاء";
+
+/* RED LINE (Line 2) */
+"station.king_saud_university" = "جامعة الملك سعود";
+"station.king_salman_oasis" = "واحة الملك سلمان";
+"station.kacst" = "المدينة التقنية";
+"station.at_takhassussi" = "التخصصي";
+"station.al_wurud" = "الورود";
+"station.king_abdulaziz_road" = "طريق الملك عبدالعزيز";
+"station.an_nuzhah" = "النزهة";
+"station.riyadh_exhibition_center" = "مركز الرياض للمعارض";
+"station.khalid_bin_alwaleed" = "طريق خالد بن الوليد";
+"station.al_khaleej" = "الخليج";
+"station.ishbiliyah" = "اشبيليا";
+"station.king_fahad_sport_city" = "مدينة الملك فهد الرياضية";
+
+/* ORANGE LINE (Line 3) */
+"station.jeddah_road" = "طريق جده";
+"station.tuwaiq" = "طويق";
+"station.ad_douh" = "الدوح";
+"station.western_station" = "المحطة الغربية";
+"station.aishah_bint_abi_bakr" = "شارع عائشة بنت أبي بكر";
+"station.dhahrat_al_badiah" = "ظهرة البديعة";
+"station.sultanah" = "سلطانة";
+"station.al_jarradiyah" = "الجرادية";
+"station.courts_complex" = "مجمع المحاكم";
+"station.al_hilla" = "الحلة";
+"station.al_margab" = "المرقب";
+"station.as_salhiyah" = "الصالحية";
+"station.first_industrial_city" = "المدينة الصناعية الأولى";
+"station.railway" = "سكة الحديد";
+"station.al_malaz" = "الملز";
+"station.jarir_district" = "حي جرير";
+"station.al_rajhi_mosque" = "جامع الراجحي";
+"station.harun_ar_rashid_road" = "طريق هارون الرشيد";
+"station.hassan_bin_thabit" = "شارع حسان بن ثابت";
+"station.khashm_al_an" = "خشم العان";
+
+/* YELLOW LINE (Line 4) */
 "station.pnu1" = "جامعة الأميرة نورة 1";
 "station.pnu2" = "جامعة الأميرة نورة 2";
 "station.airport_t5" = "الصالة 5";
 "station.airport_t3_4" = "الصالة 3-4";
 "station.airport_t1_2" = "الصالة 1-2";
 
-/* General */
+/* GREEN LINE (Line 5) */
+"station.ministry_of_finance" = "وزارة المالية";
+"station.king_abdulaziz_hospital" = "مستشفى الملك عبدالعزيز";
+"station.ministry_of_defense" = "وزارة الدفاع";
+"station.al_wizarat" = "الوزارات";
+"station.gosi" = "التأمينات الاجتماعية";
+"station.officers_club" = "نادي الضباط";
+"station.abu_dhabi_square" = "ميدان أبوظبي";
+"station.ad_dhabab" = "الضباب";
+"station.as_sulimaniyah" = "السليمانية";
+"station.king_salman_park" = "حديقة الملك سلمان";
+
+/* PURPLE LINE (Line 6) */
+"station.granadia" = "غرناطة";
+"station.al_yarmuk" = "اليرموك";
+"station.al_andalus" = "الأندلس";
+"station.khurais_road" = "طريق خريص";
+"station.as_salam" = "السلام";
+
+// MARK: - General
 "ok" = "حسناً";
 "cancel" = "إلغاء";
+"common.and" = "و";
 
-/* Onboarding */
+// MARK: - Onboarding
 "onboarding.skip" = "تخطي";
 "onboarding.next" = "التالي";
-"onboarding.done" = "ابدأ!";
-"onboarding.title1" = "تنقّل آمن";
-"onboarding.subtitle1" = "نسهّل عليك رحلاتك داخل المترو بخطوات بسيطة!";
-"onboarding.title2" = "تنبيهات ذكية";
-"onboarding.subtitle2" = "ننبهك بالاهتزاز والوميض عند الاقتراب من محطتك.";
-"onboarding.title3" = "ابدأ رحلتك بثقة";
-"onboarding.subtitle3" = "اختر وجهتك ودع التطبيق يتابع خط سير المترو عنك.";
+"onboarding.done" = "ابدأ";
+"onboarding.title1" = "تنقل آمن";
+"onboarding.subtitle1" = "نسهل عليك رحلات المترو بخطوات بسيطة";
+"onboarding.title2" = "تنبيهات ذكية!";
+"onboarding.subtitle2" = "ننبهك بالاهتزاز والوميض عند الاقتراب من محطتك";
+"onboarding.title3" = "رحلة بثقة";
+"onboarding.subtitle3" = "اختر وجهتك ودع التطبيق يتابع رحلتك";
 
-/* Main Screen */
-"main.chooseDestination" = "اختر محطتك";
+// MARK: - Main
+"main.chooseDestination" = "اختر مسارك";
 
-/* Station Sheet */
-"sheet.header" = "أهلاً! 👋🏼 وين ودك تروح؟";
+// MARK: - Metro Sheet
+"metroLines.header" = " أهلًا👋 اختر مسارك";
+"metroLines.nearestStation" = "أقرب محطة لك الآن هي %@";
+
+// MARK: - Station Sheet
+"sheet.header" = "وين ودك تروح؟";
 "sheet.startTrip" = "ابدأ الرحلة";
-"sheet.status.notNearMetro" = "قرب من خط المترو عشان تقدر تبدأ.";
-"sheet.status.noLocation" = "ما نقدر نبدأ: موقعك غير معروف.";
-"sheet.status.chooseDestination" = "اختر محطتك أولاً.";
-"status.alreadyAtDestination" = "أنت بالفعل عند أقرب محطة لك: %@";
-"lineSupport.notice" = "حالياً ندعم المسار الأصفر فقط — وباقي المسارات جاية قريب!";
+"sheet.status.notNearMetro" = "قرب من خط المترو عشان تقدر تبدأ";
+"sheet.status.noLocation" = "موقعك غير متوفر";
+"sheet.status.chooseDestination" = "اختر محطتك أولاً";
+"status.alreadyAtDestination" = "أنت بالفعل عند أقرب محطة لك %@";
+"station.transfer.message" = "تقدر تحول من هنا إلى %@";
+"lineSupport.notice" = "حالياً ندعم مسار واحد";
+"common.or" = "أو";
 
-/* Tracking Sheet */
-"tracking.eta" = "الوقت المتوقع للوصول: %@ دقيقة";
+// MARK: - Tracking
+"tracking.eta" = "الوقت المتوقع للوصول %@ دقيقة";
 "tracking.start" = "البداية";
 "tracking.destination" = "الوجهة";
-"tracking.change" = "بغير محطتي";
+"tracking.change" = "تغيير المحطة";
 "tracking.endTrip" = "إنهاء الرحلة";
-"tracking.nextStation" = "محطتك هي المحطة الجاية";
-"tracking.nearDestination" = "قربت لمحطتك";
+"tracking.nextStation" = "محطتك هي القادمة";
+"tracking.nearDestination" = "...";
 
-/* Arrival Sheet */
-"arrival.title" = "وصلت محطتك!";
+// MARK: - Arrival
+"arrival.title" = "وصلت";
 "arrival.back" = "رجوع";
 "trip.arrived" = "وصلت إلى محطتك %@";
 
-/* Alerts */
-"alert.approaching" = "استعد! قربنا من %@";
+// MARK: - Alerts
+"alert.approaching" = "استعد قربنا من %@";
 "alert.arrived" = "وصلت إلى %@";
-"alert.wrongDirection.title" = "تنبيه: اتجاه خاطئ!";
-"alert.wrongDirection.body.noTerminal" = "أنت على المسار المعاكس. الرجاء تغيير القطار.";
-"alert.wrongDirection.body.withTerminal" = "أنت على المسار المعاكس. اتجه إلى المسار الأصفر المتجه إلى %@.";
+"alert.wrongDirection.title" = "تنبيه! اتجاه خاطئ";
+"alert.wrongDirection.body.noTerminal" = "أنت في الاتجاه المعاكس";
+"alert.wrongDirection.body.withTerminal" = "أنت تسير عكس الاتجاه، اركب القطار المتجه إلى %@";
 
-/* Permission Alerts */
-"permission.location.title" = "فعّل الموقع";
-"permission.location.message" = "التطبيق يحتاج إذن الوصول للموقع لمتابعة رحلتك.";
+// MARK: - Permissions
+"permission.location.title" = "تفعيل الموقع";
+"permission.location.message" = "نحتاج إذن الموقع لمتابعة رحلتك";
 "permission.openSettings" = "فتح الإعدادات";
-"permission.notifications.title" = "فعّل الإشعارات";
-"permission.notifications.message" = "فعّل الإشعارات حتى نقدر ننبهك عند الوصول.";
+"permission.notifications.title" = "تفعيل الإشعارات";
+"permission.notifications.message" = "فعّل الإشعارات للتنبيه عند الوصول";
 
-/* Errors */
-"error.unknown" = "حدث خطأ غير متوقع. حاول مرة أخرى.";
-"trip.error.unknownLastStation" = "ما قدرنا نعرف آخر محطة ركبت منها.";
-"trip.error.nearestStationNotFound" = "ما قدرنا نحدد أقرب محطة.";
+// MARK: - Errors
+"error.unknown" = "حدث خطأ غير متوقع";
+"trip.error.unknownLastStation" = "تعذر تحديد آخر محطة";
+"trip.error.nearestStationNotFound" = "تعذر تحديد أقرب محطة";
+"trip.error.differentLineWithSuggestion" = "موقعك الحالي على %@،اختر وجهة على نفس المسار";
+
+// MARK: - Metro Lines
+"metro.line.blue" = "المسار الأزرق";
+"metro.line.red" = "المسار الأحمر";
+"metro.line.orange" = "المسار البرتقالي";
+"metro.line.yellow" = "المسار الأصفر";
+"metro.line.green" = "المسار الأخضر";
+"metro.line.purple" = "المسار البنفسجي";
+

@@ -6,25 +6,35 @@
  
 */
 
+// MARK: - SHARED STATIONS (Used in multiple lines)
+"station.kafd" = "KAFD";
+"station.stc" = "STC";
+"station.national_museum" = "National Museum";
+"station.qasr_al_hokm" = "Qasr Al Hokm";
+"station.ministry_of_education" = "Ministry of Education";
+"station.an_naseem" = "An Naseem";
+"station.ar_rabi" = "Al Rabi";
+"station.uthman_bin_affan" = "Othman Bin Affan";
+"station.sabic" = "SABIC";
+"station.al_hamra" = "Al Hamra";
+
+// MARK: - Stations
 
 /* BLUE LINE (Line 1) */
 "station.sab" = "SAB";
 "station.dr_sulaiman_al_habib" = "Dr. Sulaiman Al Habib";
-"station.kafd" = "KAFD"; // Already exists
 "station.al_murooj" = "Al Murooj";
 "station.king_fahad_district" = "King Fahad District";
 "station.king_fahad_district_2" = "King Fahad District 2";
-"station.stc" = "STC";
 "station.al_wurud_2" = "Al Wurud 2";
 "station.al_urubah" = "Al Urubah";
 "station.alinma_bank" = "Alinma Bank";
 "station.bank_albilad" = "Bank Albilad";
 "station.king_fahad_library" = "King Fahad Library";
 "station.ministry_of_interior" = "Ministry of Interior";
+"station.al_murabba" = "Al Murabba";
 "station.passport_department" = "Passport Department";
-"station.national_museum" = "National Museum"; // Already exists
 "station.al_batha" = "Al Batha";
-"station.qasr_al_hokm" = "Qasr Al Hokm";
 "station.al_oud" = "Al Oud";
 "station.skirinah" = "Skirinah";
 "station.manfouhah" = "Manfouhah";
@@ -38,14 +48,11 @@
 "station.king_salman_oasis" = "King Salman Oasis";
 "station.kacst" = "KACST";
 "station.at_takhassussi" = "At Takhassussi";
-"station.stc" = "STC"; // Already exists
 "station.al_wurud" = "Al Wurud";
 "station.king_abdulaziz_road" = "King Abdulaziz Road";
-"station.ministry_of_education" = "Ministry of Education"; // Already exists
 "station.an_nuzhah" = "An Nuzhah";
 "station.riyadh_exhibition_center" = "Riyadh Exhibition Center";
 "station.khalid_bin_alwaleed" = "Khalid Bin Alwaleed";
-"station.al_hamra" = "Al Hamra";
 "station.al_khaleej" = "Al Khaleej";
 "station.ishbiliyah" = "Ishbiliyah";
 "station.king_fahad_sport_city" = "King Fahad Sport City";
@@ -60,7 +67,6 @@
 "station.sultanah" = "Sultanah";
 "station.al_jarradiyah" = "Al Jarradiyah";
 "station.courts_complex" = "Courts Complex";
-"station.qasr_al_hokm" = "Qasr Al Hokm"; // Already exists
 "station.al_hilla" = "Al Hilla";
 "station.al_margab" = "Al Margab";
 "station.as_salhiyah" = "As Salhiyah";
@@ -70,15 +76,10 @@
 "station.jarir_district" = "Jarir District";
 "station.al_rajhi_mosque" = "Al Rajhi Mosque";
 "station.harun_ar_rashid_road" = "Harun Ar Rashid Road";
-"station.an_naseem" = "An Naseem"; // Already exists
 "station.hassan_bin_thabit" = "Hassan Bin Thabit";
 "station.khashm_al_an" = "Khashm Al An";
 
 /* YELLOW LINE (Line 4) */
-"station.kafd" = "KAFD";
-"station.ar_rabi" = "Al Rabi";
-"station.uthman_bin_affan" = "Othman Bin Affan";
-"station.sabic" = "SABIC";
 "station.pnu1" = "PNU 1";
 "station.pnu2" = "PNU 2";
 "station.airport_t5" = "Terminal 5";
@@ -86,7 +87,6 @@
 "station.airport_t1_2" = "Terminal 1–2";
 
 /* GREEN LINE (Line 5) */
-"station.national_museum" = "National Museum"; // Already exists
 "station.ministry_of_finance" = "Ministry of Finance";
 "station.king_abdulaziz_hospital" = "King Abdulaziz Hospital";
 "station.ministry_of_defense" = "Ministry of Defense";
@@ -97,74 +97,87 @@
 "station.ad_dhabab" = "Ad Dhabab";
 "station.as_sulimaniyah" = "As Sulimaniyah";
 "station.king_salman_park" = "King Salman Park";
-"station.ministry_of_education" = "Ministry of Education"; // Already exists
 
 /* PURPLE LINE (Line 6) */
-// station.kafd, ar_rabi, uthman_bin_affan, sabic already exist
 "station.granadia" = "Granadia";
 "station.al_yarmuk" = "Al Yarmuk";
-"station.al_hamra" = "Al Hamra"; // Already exists
 "station.al_andalus" = "Al Andalus";
 "station.khurais_road" = "Khurais Road";
 "station.as_salam" = "As Salam";
-"station.an_naseem" = "An Naseem"; // Already exists
 
-/* General */
+// MARK: - General
 "ok" = "OK";
 "cancel" = "Cancel";
+"common.and" = "and";
 
-/* Onboarding */
+// MARK: - Onboarding
 "onboarding.skip" = "Skip";
 "onboarding.next" = "Next";
-"onboarding.done" = "Start!";
+"onboarding.done" = "Start";
 "onboarding.title1" = "Safe Travel";
-"onboarding.subtitle1" = "We make your metro trips easier with simple steps.";
-"onboarding.title2" = "Smart Alerts";
-"onboarding.subtitle2" = "We notify you with vibration and flash as you approach your station.";
+"onboarding.subtitle1" = "We make your metro trips easier with simple steps";
+"onboarding.title2" = "Smart Alerts!";
+"onboarding.subtitle2" = "We notify you with vibration and flash as you approach your station";
 "onboarding.title3" = "Travel with Confidence";
-"onboarding.subtitle3" = "Choose your destination and let the app track your metro route.";
+"onboarding.subtitle3" = "Choose your destination and let the app track your route";
 
-/* Main Screen */
-"main.chooseDestination" = "Choose a Station";
+// MARK: - Main
+"main.chooseDestination" = "Choose a Line";
 
-/* Station Sheet */
-"sheet.header" = "Hello!👋🏼 Where would you like to go?";
+// MARK: - Metro Sheet
+"metroLines.header" = "Hello👋 Choose a Line";
+"metroLines.nearestStation" = "Your nearest station is %@";
+
+// MARK: - Station Sheet
+"sheet.header" = "Where would you like to go?";
 "sheet.startTrip" = "Start Trip";
-"sheet.status.notNearMetro" = "Move closer to the metro line to begin.";
-"sheet.status.noLocation" = "Cannot start the trip because your location is unavailable.";
-"sheet.status.chooseDestination" = "Please select a station first.";
-"status.alreadyAtDestination" = "You are already at your nearest station: %@";
-"lineSupport.notice" = "Only the Yellow Line is supported for now. More lines are coming soon.";
+"sheet.status.notNearMetro" = "Move closer to the metro line to begin";
+"sheet.status.noLocation" = "Location is unavailable";
+"sheet.status.chooseDestination" = "Please select a station first";
+"status.alreadyAtDestination" = "You are already at your nearest station %@";
+"station.transfer.message" = "You can transfer here to %@";
+"lineSupport.notice" = "Currently only one line is supported";
+"common.or" = "or";
 
-/* Tracking Sheet */
-"tracking.eta" = "Estimated arrival time: %@ min";
+// MARK: - Tracking
+"tracking.eta" = "Estimated arrival time %@ min";
 "tracking.start" = "Start";
 "tracking.destination" = "Destination";
 "tracking.change" = "Change Station";
 "tracking.endTrip" = "End Trip";
 "tracking.nextStation" = "Your station is next";
-"tracking.nearDestination" = "You’re almost there";
+"tracking.nearDestination" = "...";
 
-/* Arrival Sheet */
-"arrival.title" = "You’ve arrived!";
+// MARK: - Arrival
+"arrival.title" = "You have arrived";
 "arrival.back" = "Back";
-"trip.arrived" = "You have arrived at your station: %@";
+"trip.arrived" = "You have arrived at %@";
 
-/* Alerts */
-"alert.approaching" = "Get ready! Approaching %@";
+// MARK: - Alerts
+"alert.approaching" = "Get ready Approaching %@";
 "alert.arrived" = "You have arrived at %@";
-"alert.wrongDirection.title" = "Wrong direction detected!";
-"alert.wrongDirection.body.noTerminal" = "You are riding in the opposite direction. Please change trains.";
-"alert.wrongDirection.body.withTerminal" = "You are riding in the opposite direction. Take the yellow line heading toward %@.";
+"alert.wrongDirection.title" = "Wrong direction detected";
+"alert.wrongDirection.body.noTerminal" = "You are riding in the opposite direction";
+"alert.wrongDirection.body.withTerminal" = "You're going the wrong way, take the train heading to %@";
 
-/* Permissions */
+// MARK: - Permissions
 "permission.location.title" = "Enable Location";
-"permission.location.message" = "Location access is required to track your trip.";
+"permission.location.message" = "Location access is required";
 "permission.openSettings" = "Open Settings";
 "permission.notifications.title" = "Enable Notifications";
-"permission.notifications.message" = "Enable notifications so we can alert you upon arrival.";
+"permission.notifications.message" = "Enable notifications to get alerts";
 
-/* Errors */
-"error.unknown" = "An unexpected error occurred. Please try again.";
-"trip.error.unknownLastStation" = "We couldn’t determine the last station you boarded from.";
-"trip.error.nearestStationNotFound" = "We couldn’t determine the nearest station to your location.";
+// MARK: - Errors
+"error.unknown" = "An unexpected error occurred";
+"trip.error.unknownLastStation" = "Unable to determine last station";
+"trip.error.nearestStationNotFound" = "Unable to find nearest station";
+"trip.error.differentLineWithSuggestion" = "Your current location is on %@, Please choose a destination on the same line";
+
+// MARK: - Metro Lines
+"metro.line.blue" = "Blue Line";
+"metro.line.red" = "Red Line";
+"metro.line.orange" = "Orange Line";
+"metro.line.yellow" = "Yellow Line";
+"metro.line.green" = "Green Line";
+"metro.line.purple" = "Purple Line";
+

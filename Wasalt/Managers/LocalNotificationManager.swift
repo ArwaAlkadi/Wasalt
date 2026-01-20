@@ -6,44 +6,60 @@
 //
 
 /*
-    تنبيه مهم
  
-     Important note about LocationManager and notifications
+==================================================
+Important Note – Notification Logic
+(LocalNotificationManager)
+==================================================
 
-     LocationManager (Geofencing) is part of the iOS system itself,
-     which means the system monitors the user’s location, not the app.
+This file is responsible for sending local notifications.
 
+Key concept:
+Location-based notifications are managed by iOS itself,
+not directly by the app.
 
-    :إحنا نحدد للنظام
-   مناطق المراقبة (وصول، اقتراب، عكس الاتجاه) -
+App responsibility:
+- Define notification content
+- Define geofence regions (approaching, arrival, wrong direction)
 
-    :النظام بدوره
-    يراقب الموقع حتى لو التطبيق مقفول -
-    يشتغل حتى لو المستخدم سوا سوايب للصفحة -
-    يشتغل حتى لو النظام سكّر التطبيق من الخلفية -
+System responsibility:
+- Monitor user location
+- Trigger notifications when entering regions
+- Works even if the app is backgrounded or closed
 
-    :نفس الشي مع الإشعارات
-     إشعارات الموقع تُدار من النظام -
-     النظام هو اللي يقرر متى يطلق الإشعار -
+Notification types used:
+1) Location-based notifications
+   - UNLocationNotificationTrigger
+   - Reliable in background
 
-    :عشان كذا
-     حددنا عمر للرحلة وهو ساعتين ونص -
-     وإذا انتهت الرحلة أو انتهى وقتها
-      نوقف مراقبة المواقع ونلغي الإشعارات
+2) Fallback time-based notifications
+   - Triggered after geofence entry
+   - Used to ensure in-app delivery
 
-    :الهدف
-    منع إرسال تنبيهات قديمة أو غير صحيحة للمستخدم
+Why notifications are canceled:
+- When the trip ends
+- Or when the trip expires
+To prevent outdated or incorrect alerts.
+
+Connection to LocationManager:
+LocationManager detects geofence entry
+→ then calls LocalNotificationManager
+to show the appropriate notification.
+ 
 */
 
 import MapKit
 import UserNotifications
 
-//MARK: - LocalNotificationManager → sends local notifications (arrival/approaching + wrongDirection).
+// MARK: - LocalNotificationManager
+/// LocalNotificationManager → sends local notifications (arrival/approaching + wrongDirection).
 final class LocalNotificationManager {
 
+    // MARK: - Singleton
     static let shared = LocalNotificationManager()
     private init() {}
 
+    // MARK: - Authorization
     func requestAuthIfNeeded() {
         UNUserNotificationCenter.current().requestAuthorization(
             options: [.alert, .sound, .badge]
@@ -52,6 +68,7 @@ final class LocalNotificationManager {
         }
     }
 
+    // MARK: - Cancel Notifications
     func cancelTripNotifications() {
         UNUserNotificationCenter.current().removePendingNotificationRequests(
             withIdentifiers: [
@@ -64,12 +81,14 @@ final class LocalNotificationManager {
         )
     }
 
+    // MARK: - Schedule Notifications
     func scheduleLocationNotifications(for station: Station) {
         cancelTripNotifications()
         scheduleApproachingNotification(for: station)
         scheduleArrivalNotification(for: station)
     }
 
+    // MARK: - Approaching Notification
     private func scheduleApproachingNotification(for station: Station) {
         let content = UNMutableNotificationContent()
         content.title = String(format: "alert.approaching".localized, station.name)
@@ -100,6 +119,7 @@ final class LocalNotificationManager {
         }
     }
 
+    // MARK: - Arrival Notification
     private func scheduleArrivalNotification(for station: Station) {
         let content = UNMutableNotificationContent()
         content.title = String(format: "alert.arrived".localized, station.name)
@@ -130,7 +150,8 @@ final class LocalNotificationManager {
         }
     }
 
-    // ✅ Geofence-triggered fallback notifications (called from CLLocationManager delegate)
+    // MARK: - Geofence Fallback Notifications
+    /// Geofence-triggered fallback notifications (called from CLLocationManager delegate)
     func notifyApproaching(stationName: String) {
         let content = UNMutableNotificationContent()
         content.title = String(format: "alert.approaching".localized, stationName)
@@ -161,7 +182,8 @@ final class LocalNotificationManager {
         UNUserNotificationCenter.current().add(req)
     }
 
-    // ✅ Wrong Direction as LOCATION notification (works outside app)
+    // MARK: - Wrong Direction Notification
+    /// Wrong Direction as LOCATION notification (works outside app)
     func scheduleWrongDirectionNotification(wrongStation: Station, terminalName: String) {
         UNUserNotificationCenter.current().removePendingNotificationRequests(
             withIdentifiers: ["wrong_direction_notification"]

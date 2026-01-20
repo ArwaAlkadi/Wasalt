@@ -7,65 +7,47 @@ import Foundation
 import SwiftUI
 internal import _LocationEssentials
 
+// MARK: - Metro lines enum
 enum MetroLine: String, CaseIterable, Identifiable {
 
-    case line1 = "Line 1"   // Blue
-    case line2 = "Line 2"   // Red
-    case line3 = "Line 3"   // Orange
-    case line4 = "Line 4"   // Yellow
-    case line5 = "Line 5"   // Green
-    case line6 = "Line 6"   // Purple
+    // All supported lines
+    case blue = "Blue Line"
+    case red = "Red Line"
+    case orange = "Orange Line"
+    case yellow = "Yellow Line"
+    case green = "Green Line"
+    case purple = "Purple Line"
 
+    // Unique ID for SwiftUI
     var id: String { rawValue }
 
-    // MARK: - Line Color
+    // Line main color
     var color: Color {
         switch self {
-        case .line1: return .blue
-        case .line2: return .red
-        case .line3: return .orange
-        case .line4: return .yellow
-        case .line5: return .green
-        case .line6: return .purple
+        case .blue: return .blue
+        case .red: return .red
+        case .orange: return .orange
+        case .yellow: return .yellow
+        case .green: return .green
+        case .purple: return .purple
         }
     }
 
-    // MARK: - Stations per Line
+    // Stations belonging to each line
     var stations: [Station] {
         switch self {
-        case .line1:
-            return MetroData.blueLineStations
-
-        case .line2:
-            return MetroData.redLineStations
-
-        case .line3:
-            return MetroData.orangeLineStations
-
-        case .line4:
-            return MetroData.yellowLineStations
-
-        case .line5:
-            return MetroData.greenLineStations
-
-        case .line6:
-            return MetroData.purpleLineStations
-        }
-    }
-
-    // MARK: - Display Name (optional)
-    var displayName: String {
-        switch self {
-        case .line1: return "Blue Line"
-        case .line2: return "Red Line"
-        case .line3: return "Orange Line"
-        case .line4: return "Yellow Line"
-        case .line5: return "Green Line"
-        case .line6: return "Purple Line"
+        case .blue: return MetroData.blueLineStations
+        case .red: return MetroData.redLineStations
+        case .orange: return MetroData.orangeLineStations
+        case .yellow: return MetroData.yellowLineStations
+        case .green: return MetroData.greenLineStations
+        case .purple: return MetroData.purpleLineStations
         }
     }
 }
 
+
+// MARK: - Remove duplicate stations by coordinate
 extension Array where Element == Station {
     func uniqueByCoordinate() -> [Station] {
         var seen = Set<String>()
@@ -76,17 +58,55 @@ extension Array where Element == Station {
     }
 }
 
+
+// MARK: - Create MetroLine from external string (GeoJSON, etc.)
 extension MetroLine {
 
     init?(geoJSONName: String) {
         switch geoJSONName.lowercased() {
-        case "blue line": self = .line1
-        case "red line": self = .line2
-        case "orange line": self = .line3
-        case "yellow line": self = .line4
-        case "green line": self = .line5
-        case "purple line": self = .line6
+        case "blue line": self = .blue
+        case "red line": self = .red
+        case "orange line": self = .orange
+        case "yellow line": self = .yellow
+        case "green line": self = .green
+        case "purple line": self = .purple
         default: return nil
         }
+    }
+}
+
+
+// MARK: - Localization support
+extension MetroLine {
+
+    /// Localization key for the line name
+    private var localizationKey: String {
+        switch self {
+        case .blue: return "metro.line.blue"
+        case .red: return "metro.line.red"
+        case .orange: return "metro.line.orange"
+        case .yellow: return "metro.line.yellow"
+        case .green: return "metro.line.green"
+        case .purple: return "metro.line.purple"
+        }
+    }
+
+    /// Localized display name
+    var displayName: String {
+        NSLocalizedString(localizationKey, comment: "")
+    }
+}
+
+
+// MARK: - Clean station name from transfer text
+extension Station {
+    var cleanName: String {
+        name
+            .replacingOccurrences(of: " - محطة تحويل", with: "")
+            .replacingOccurrences(of: " - Transfer Station", with: "")
+            .replacingOccurrences(of: " - تحويل إلى:", with: "")
+            .replacingOccurrences(of: " - Transfer to:", with: "")
+            .replacingOccurrences(of: " - تحويل إلى", with: "")
+            .replacingOccurrences(of: " - Transfer to", with: "")
     }
 }

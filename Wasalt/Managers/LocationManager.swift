@@ -6,46 +6,57 @@
 //
 
 /*
-    تنبيه مهم
+ 
+==================================================
+Important Note – Location & Geofencing Logic
+(LocationManager)
+==================================================
 
-     Important note about LocationManager and notifications
+This file handles:
+- GPS location updates
+- Geofence creation and monitoring
+- Detecting approaching, arrival, and wrong direction
+- Managing trip expiration
 
-     LocationManager (Geofencing) is part of the iOS system itself,
-     which means the system monitors the user’s location, not the app.
+Key concept:
+Geofencing is handled by iOS, not by the app lifecycle.
 
+How it works:
+- The app registers geofence regions
+- iOS monitors location continuously
+- didEnterRegion is triggered automatically
 
-    :إحنا نحدد للنظام
-   مناطق المراقبة (وصول، اقتراب، عكس الاتجاه) -
+Geofence regions used:
+- Approaching destination
+- Arrival at destination
+- Wrong direction (opposite station)
 
-    :النظام بدوره
-    يراقب الموقع حتى لو التطبيق مقفول -
-    يشتغل حتى لو المستخدم سوا سوايب للصفحة -
-    يشتغل حتى لو النظام سكّر التطبيق من الخلفية -
+Trip expiration (2.5 hours) exists to:
+- Prevent long-running geofences
+- Reduce battery usage
+- Avoid delayed notifications
+- Reset the app to a safe state
 
-    :نفس الشي مع الإشعارات
-     إشعارات الموقع تُدار من النظام -
-     النظام هو اللي يقرر متى يطلق الإشعار -
+Connection to LocalNotificationManager:
+LocationManager detects region entry
+→ then calls LocalNotificationManager
+to send system notifications.
 
-    :عشان كذا
-     حددنا عمر للرحلة وهو ساعتين ونص -
-     وإذا انتهت الرحلة أو انتهى وقتها
-      نوقف مراقبة المواقع ونلغي الإشعارات
-
-    :الهدف
-    منع إرسال تنبيهات قديمة أو غير صحيحة للمستخدم
 */
 
 import MapKit
 import Combine
 
-//MARK: - LocationManager → continuously tracks the user’s real GPS location.
+// MARK: - LocationManager
+/// Continuously tracks the user’s real GPS location.
 final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
+
     private let manager = CLLocationManager()
 
     @Published var userLocation: CLLocation?
     @Published var wrongDirectionTriggered: Bool = false
 
-    //  هذا اللي بتراقبه الواجهة/الفيو مودل
+    /// Observed by UI / ViewModel to know when the trip expires
     @Published var tripExpired: Bool = false
 
     private let tripExpirySeconds: TimeInterval = 2.5 * 60 * 60
@@ -89,7 +100,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         UserDefaults.standard.set(destination.name,  forKey: "currentDestinationName")
         UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: "tripStartTimestamp")
 
-        // العكس
+        /// Determine correct terminal name for wrong direction alerts
         let correctTerminalName: String
         if destination.order > start.order {
             correctTerminalName = allStations.max(by: { $0.order < $1.order })?.name ?? ""
@@ -100,7 +111,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         }
         UserDefaults.standard.set(correctTerminalName, forKey: "correctTerminalName")
 
-        //  الاقتراب
+        /// Approaching region
         let approachRegion = CLCircularRegion(
             center: destination.coordinate,
             radius: TripRadius.approaching,
@@ -111,7 +122,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         manager.startMonitoring(for: approachRegion)
         print("🟡 [GeoFence] Monitoring APPROACH for \(destination.name)")
 
-        //  الوصول
+        /// Arrival region
         let arrivalRegion = CLCircularRegion(
             center: destination.coordinate,
             radius: TripRadius.arrival,
@@ -122,7 +133,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         manager.startMonitoring(for: arrivalRegion)
         print("🟢 [GeoFence] Monitoring ARRIVAL for \(destination.name)")
 
-        //  عكس الاتجاه (محطة وحدة)
+        /// Wrong direction region (single station)
         let wrongOrder: Int
         if destination.order > start.order {
             wrongOrder = start.order - 1
@@ -166,7 +177,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         print("🧹 [GeoFence] Stop trip geofences")
     }
 
-    // MARK: - Expiry (UI helper)
+    // MARK: - Trip Expiry
     private func startExpiryTimer() {
         expiryTimer?.cancel()
         expiryTimer = Timer
@@ -178,7 +189,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     }
 
     private func checkTripExpiryAndExpireIfNeeded() {
-        // ما فيه رحلة؟ لا تسوي شي
+        /// No active trip
         guard UserDefaults.standard.object(forKey: "currentDestinationOrder") != nil else {
             return
         }
@@ -231,7 +242,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
             return
         }
 
-        //  expiry 2.5h (ينطبق على كل شيء: وصول/اقتراب/عكس)
+        /// Apply expiry rule (2.5h) to all regions
         let startTS = UserDefaults.standard.double(forKey: "tripStartTimestamp")
         if startTS == 0 {
             expireTrip()
@@ -250,25 +261,25 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
 
         let notif = LocalNotificationManager.shared
 
-        //  عكس الاتجاه
+        /// Wrong direction
         if circular.identifier == "wrong_direction" {
             print("🚨 [GeoFence] Wrong direction detected")
 
-            // داخل التطبيق فقط (بانر)
+            /// In-app banner only
             DispatchQueue.main.async {
                 self.wrongDirectionTriggered = true
             }
             return
         }
 
-        //  الاقتراب
+        /// Approaching destination
         if circular.identifier == "approach_\(destOrder)" {
             print("🟡 [GeoFence] Approaching destination: \(destName)")
             notif.notifyApproaching(stationName: destName)
             return
         }
 
-        //  الوصول
+        /// Arrived at destination
         if circular.identifier == "arrival_\(destOrder)" {
             print("🟢 [GeoFence] Arrived to destination: \(destName)")
             notif.notifyArrival(stationName: destName)
@@ -290,4 +301,3 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         print("✅ [GeoFence] Started monitoring: \(region.identifier)")
     }
 }
-

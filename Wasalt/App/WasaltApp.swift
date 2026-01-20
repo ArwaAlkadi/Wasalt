@@ -10,8 +10,8 @@ struct WasaltApp: App {
     }
 }
 
-
-// تحويل اللغة
+// MARK: - Localization Helper
+/// Language localization
 extension String {
     var localized: String {
         NSLocalizedString(self, comment: "")

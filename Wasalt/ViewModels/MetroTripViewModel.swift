@@ -8,23 +8,25 @@
 import MapKit
 import Combine
 
-//تعديل المسافات
+// MARK: - Trip Radius
 enum TripRadius {
     static let arrival: CLLocationDistance = 250.0
     static let approaching: CLLocationDistance = 500.0
     static let wrongDirection: CLLocationDistance = 500.0
 }
 
-// MARK: - MetroTripViewModel → handles trip flow, ETA updates, and arrival logic.
+// MARK: - MetroTripViewModel → handles trip flow, ETA updates, and arrival logic
 final class MetroTripViewModel: ObservableObject {
 
-    private let stations: [Station]
+    // MARK: - Stored Data
+    private var allStations: [Station]
     private let notificationManager: LocalNotificationManager
+    @Published private(set) var stations: [Station]
 
- 
     private let locationManager: LocationManager?
     private var cancellables = Set<AnyCancellable>()
 
+    // MARK: - Published State
     @Published var selectedDestination: Station?
     @Published var isTracking: Bool = false
     @Published var startStation: Station?
@@ -38,25 +40,34 @@ final class MetroTripViewModel: ObservableObject {
     @Published var activeAlert: MetroAlertType? = nil
     @Published var upcomingStations: [Station] = []
 
-    /// الوصول الفعلي للمحطة
+    // MARK: - Distance Rules
     private let arrivalDistance: CLLocationDistance = TripRadius.arrival
-    /// بداية «الاقتراب» من المحطة
     private let approachingDistance: CLLocationDistance = TripRadius.approaching
 
+    // MARK: - Trip Direction
     private enum TripDirection { case forward, backward }
     private var tripDirection: TripDirection?
+
+    // MARK: - Alert Flags
     private var didFireApproachingAlert = false
     private var didFireArrivalAlert = false
     private var isChangingDestination: Bool = false
 
+    // MARK: - Wrong Direction Detection
+    private var didFireWrongDirectionAlert = false
+    private var lastKnownOrder: Int?
+
+    // MARK: - Init
+    /// Initializes the trip view model and observes trip expiration from LocationManager
     init(
         stations: [Station],
         notificationManager: LocalNotificationManager = .shared,
         locationManager: LocationManager? = nil
     ) {
-        self.stations = stations
         self.notificationManager = notificationManager
         self.locationManager = locationManager
+        self.allStations = stations
+        self.stations = stations
 
         locationManager?.$tripExpired
             .receive(on: RunLoop.main)
@@ -72,11 +83,21 @@ final class MetroTripViewModel: ObservableObject {
             .store(in: &cancellables)
     }
 
+    // MARK: - Line Selection
+    /// Filters stations based on the selected metro line
+    func filterStations(for line: MetroLine) {
+        self.stations = line.stations
+        self.allStations = MetroData.allStations
+        resetProgress(keepDestination: false)
+    }
+
+    /// Sets the selected destination station
     func selectDestination(_ station: Station) {
         selectedDestination = station
     }
 
-    // - Start Trip
+    // MARK: - Start Trip
+    /// Starts a new trip based on the user’s current location
     func startTrip(userLocation: CLLocation?) {
         guard let dest = selectedDestination else {
             statusText = "sheet.status.chooseDestination".localized
@@ -113,11 +134,15 @@ final class MetroTripViewModel: ObservableObject {
             showArrivalSheet = false
             didFireApproachingAlert = false
             didFireArrivalAlert = false
+            didFireWrongDirectionAlert = false
+            lastKnownOrder = baseStation.order
             statusText = ""
             isChangingDestination = false
 
-            let fakeLocation = CLLocation(latitude: baseStation.coordinate.latitude,
-                                          longitude: baseStation.coordinate.longitude)
+            let fakeLocation = CLLocation(
+                latitude: baseStation.coordinate.latitude,
+                longitude: baseStation.coordinate.longitude
+            )
 
             notificationManager.scheduleLocationNotifications(for: dest)
             updateProgress(for: fakeLocation)
@@ -129,15 +154,42 @@ final class MetroTripViewModel: ObservableObject {
             return
         }
 
-        guard let startSt = nearestStation(to: location) else {
+        guard let nearestOverall = nearestStation(to: location, in: allStations) else {
             statusText = "trip.error.nearestStationNotFound".localized
             return
         }
 
-        startStation = startSt
-        lastPassedStation = startSt
+        guard let nearestInLine = nearestStation(to: location, in: stations) else {
+            statusText = "trip.error.nearestStationNotFound".localized
+            return
+        }
 
-        if dest.order == startSt.order {
+        guard isSamePhysicalStation(nearestOverall, nearestInLine) else {
+            let suggestedLines = findLinesForStation(nearestOverall)
+
+            if !suggestedLines.isEmpty {
+                let separator = "common.or".localized
+                let lineNames = suggestedLines
+                    .map { $0.displayName }
+                    .joined(separator: " \(separator) ")
+
+                statusText = String(
+                    format: "trip.error.differentLineWithSuggestion".localized,
+                    lineNames
+                )
+            } else {
+                statusText = "trip.error.differentLine".localized
+            }
+
+            isTracking = false
+            return
+        }
+
+        startStation = nearestInLine
+        lastPassedStation = nearestInLine
+        lastKnownOrder = nearestInLine.order
+
+        if dest.order == nearestInLine.order {
             currentNearestStation = dest
             stationsRemaining = 0
             etaMinutes = 0
@@ -154,23 +206,28 @@ final class MetroTripViewModel: ObservableObject {
             return
         }
 
-        tripDirection = dest.order > startSt.order ? .forward : .backward
+        tripDirection = dest.order > nearestInLine.order ? .forward : .backward
 
         isTracking = true
         showArrivalSheet = false
         didFireApproachingAlert = false
         didFireArrivalAlert = false
+        didFireWrongDirectionAlert = false
         statusText = ""
 
         notificationManager.scheduleLocationNotifications(for: dest)
         updateProgress(for: location)
     }
 
+    // MARK: - Location Updates
+    /// Updates trip progress when user location changes
     func userLocationUpdated(_ location: CLLocation?) {
         guard isTracking, let location = location else { return }
         updateProgress(for: location)
     }
 
+    // MARK: - Trip Controls
+    /// Ends the trip and resets all trip-related state
     func endTripAndReset() {
         isTracking = false
         resetProgress(keepDestination: false)
@@ -178,6 +235,7 @@ final class MetroTripViewModel: ObservableObject {
         notificationManager.cancelTripNotifications()
     }
 
+    /// Cancels the current trip and allows selecting a new destination
     func cancelAndChooseAgain() {
         isTracking = false
 
@@ -194,19 +252,24 @@ final class MetroTripViewModel: ObservableObject {
         tripDirection = nil
         didFireApproachingAlert = false
         didFireArrivalAlert = false
+        didFireWrongDirectionAlert = false
+        lastKnownOrder = nil
         activeAlert = nil
         statusText = ""
         isChangingDestination = true
         notificationManager.cancelTripNotifications()
     }
 
+    /// Clears the currently active in-app alert
     func clearActiveAlert() {
         activeAlert = nil
     }
 
+    // MARK: - Stations Between Start and Destination
+    /// Returns all stations between the start and destination stations
     var middleStations: [Station] {
         guard let start = startStation,
-              let dest  = selectedDestination
+              let dest = selectedDestination
         else { return [] }
 
         if dest.order > start.order {
@@ -222,15 +285,10 @@ final class MetroTripViewModel: ObservableObject {
         }
     }
 
+    /// Checks whether a station has already been passed
     func isStationReached(_ station: Station) -> Bool {
         guard let direction = tripDirection else { return false }
-
-        let refOrder: Int? =
-        lastPassedStation?.order ??
-        currentNearestStation?.order ??
-        startStation?.order
-
-        guard let currentOrder = refOrder else { return false }
+        guard let currentOrder = currentNearestStation?.order else { return false }
 
         switch direction {
         case .forward:
@@ -240,14 +298,18 @@ final class MetroTripViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Progress Updates
+    /// Updates ETA, remaining stations, alerts, and arrival state
     private func updateProgress(for location: CLLocation) {
         guard let dest = selectedDestination,
-              let nearest = nearestStation(to: location) else { return }
+              let nearest = nearestStation(to: location, in: stations) else { return }
 
-        if currentNearestStation?.order != nearest.order {
-            lastPassedStation = nearest
+        if let current = currentNearestStation, current.order != nearest.order {
+            lastPassedStation = current
         }
         currentNearestStation = nearest
+
+        checkWrongDirection(currentOrder: nearest.order)
 
         let result = computeRemainingStationsAndTime(from: nearest, to: dest)
         stationsRemaining = result.stations
@@ -255,8 +317,10 @@ final class MetroTripViewModel: ObservableObject {
         nextStation = result.next
         upcomingStations = computeUpcomingStations(from: nearest, to: dest)
 
-        let destLocation = CLLocation(latitude: dest.coordinate.latitude,
-                                      longitude: dest.coordinate.longitude)
+        let destLocation = CLLocation(
+            latitude: dest.coordinate.latitude,
+            longitude: dest.coordinate.longitude
+        )
         let distanceToDest = destLocation.distance(from: location)
 
         if distanceToDest <= arrivalDistance {
@@ -288,8 +352,42 @@ final class MetroTripViewModel: ObservableObject {
         }
     }
 
-    private func computeRemainingStationsAndTime(from current: Station, to dest: Station)
-    -> (stations: Int, minutes: Int, next: Station?) {
+    // MARK: - Wrong Direction Check
+    /// Detects whether the user is moving in the wrong direction
+    private func checkWrongDirection(currentOrder: Int) {
+        guard let direction = tripDirection,
+              let lastOrder = lastKnownOrder,
+              currentOrder != lastOrder,
+              !didFireWrongDirectionAlert else {
+
+            if lastKnownOrder != nil {
+                lastKnownOrder = currentOrder
+            }
+            return
+        }
+
+        let isMovingWrong: Bool
+        switch direction {
+        case .forward:
+            isMovingWrong = currentOrder < lastOrder
+        case .backward:
+            isMovingWrong = currentOrder > lastOrder
+        }
+
+        if isMovingWrong {
+            activeAlert = .wrongDirection
+            didFireWrongDirectionAlert = true
+        }
+
+        lastKnownOrder = currentOrder
+    }
+
+    // MARK: - Remaining Stations + ETA
+    /// Calculates remaining stations, total ETA, and next station
+    private func computeRemainingStationsAndTime(
+        from current: Station,
+        to dest: Station
+    ) -> (stations: Int, minutes: Int, next: Station?) {
 
         guard let direction = tripDirection else {
             let diff = abs(dest.order - current.order)
@@ -312,6 +410,7 @@ final class MetroTripViewModel: ObservableObject {
                     count += 1
                 }
             }
+
         case .backward:
             if current.order <= dest.order { return (0, 0, nil) }
             for order in stride(from: current.order, to: dest.order, by: -1) {
@@ -319,7 +418,7 @@ final class MetroTripViewModel: ObservableObject {
                     if count == 0 {
                         next = stations.first(where: { $0.order == order - 1 })
                     }
-                    totalMinutes += st.minutesToNext ?? 0
+                    totalMinutes += st.minutesToPrevious ?? 0
                     count += 1
                 }
             }
@@ -328,6 +427,8 @@ final class MetroTripViewModel: ObservableObject {
         return (count, totalMinutes, next)
     }
 
+    // MARK: - Upcoming Stations
+    /// Returns the list of upcoming stations toward the destination
     private func computeUpcomingStations(from current: Station, to dest: Station) -> [Station] {
         guard let direction = tripDirection else { return [] }
 
@@ -346,16 +447,24 @@ final class MetroTripViewModel: ObservableObject {
         }
     }
 
-    private func nearestStation(to location: CLLocation) -> Station? {
-        stations.min { lhs, rhs in
-            let lhsLoc = CLLocation(latitude: lhs.coordinate.latitude,
-                                    longitude: lhs.coordinate.longitude)
-            let rhsLoc = CLLocation(latitude: rhs.coordinate.latitude,
-                                    longitude: rhs.coordinate.longitude)
+    // MARK: - Helpers
+    /// Finds the nearest station to the given location
+    private func nearestStation(to location: CLLocation, in list: [Station]) -> Station? {
+        list.min { lhs, rhs in
+            let lhsLoc = CLLocation(latitude: lhs.coordinate.latitude, longitude: lhs.coordinate.longitude)
+            let rhsLoc = CLLocation(latitude: rhs.coordinate.latitude, longitude: rhs.coordinate.longitude)
             return lhsLoc.distance(from: location) < rhsLoc.distance(from: location)
         }
     }
 
+    /// Checks whether two stations represent the same physical location
+    private func isSamePhysicalStation(_ a: Station, _ b: Station) -> Bool {
+        let aLoc = CLLocation(latitude: a.coordinate.latitude, longitude: a.coordinate.longitude)
+        let bLoc = CLLocation(latitude: b.coordinate.latitude, longitude: b.coordinate.longitude)
+        return aLoc.distance(from: bLoc) < 25
+    }
+
+    /// Resets all trip-related state
     private func resetProgress(keepDestination: Bool) {
         if !keepDestination {
             selectedDestination = nil
@@ -371,20 +480,38 @@ final class MetroTripViewModel: ObservableObject {
         tripDirection = nil
         didFireApproachingAlert = false
         didFireArrivalAlert = false
+        didFireWrongDirectionAlert = false
+        lastKnownOrder = nil
         activeAlert = nil
         isChangingDestination = false
     }
 
-    var correctTerminalName: String? {
+    // MARK: - Terminal Station
+    /// Returns the correct terminal station based on trip direction
+    var correctTerminalStation: Station? {
         guard let start = startStation,
               let dest = selectedDestination else { return nil }
 
         if dest.order > start.order {
-            return stations.max(by: { $0.order < $1.order })?.name
+            return stations.max(by: { $0.order < $1.order })
         } else if dest.order < start.order {
-            return stations.min(by: { $0.order < $1.order })?.name
+            return stations.min(by: { $0.order < $1.order })
         } else {
             return nil
         }
+    }
+
+    // MARK: - Suggested Lines
+    /// Finds all metro lines that include the given station
+    private func findLinesForStation(_ station: Station) -> [MetroLine] {
+        var lines: [MetroLine] = []
+        for line in MetroLine.allCases {
+            if line.stations.contains(where: { s in
+                isSamePhysicalStation(s, station)
+            }) {
+                lines.append(line)
+            }
+        }
+        return lines
     }
 }

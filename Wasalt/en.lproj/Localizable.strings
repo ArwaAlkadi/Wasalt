@@ -145,7 +145,7 @@
 "tracking.destination" = "Destination";
 "tracking.change" = "Change Station";
 "tracking.endTrip" = "End Trip";
-"tracking.nextStation" = "Your station is next";
+"tracking.nextStation" = "Your next station is coming in %@ min";
 "tracking.nearDestination" = "...";
 
 // MARK: - Arrival

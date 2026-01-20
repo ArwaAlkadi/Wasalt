@@ -366,7 +366,8 @@ struct TrackingSheet: View {
 
     // MARK: - ETA Text
     private var etaDisplayText: String {
-        if metroVM.stationsRemaining == 1 { return "tracking.nextStation".localized }
+    // if metroVM.stationsRemaining == 1 { return "tracking.nextStation".localized }
+        //removed line 369 to fix the logic
         if metroVM.etaMinutes == 0 { return "tracking.nearDestination".localized }
         return String(format: "tracking.eta".localized, "\(metroVM.etaMinutes)")
     }

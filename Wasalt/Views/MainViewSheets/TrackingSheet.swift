@@ -17,8 +17,6 @@ struct TrackingSheet: View {
 
     @ObservedObject var metroVM: MetroTripViewModel
     
-    @State private var showingTransferPopover: Bool = false
-    @State private var selectedTransferStation: Station? = nil
 
     var body: some View {
         ZStack {
@@ -67,59 +65,6 @@ struct TrackingSheet: View {
                             HStack(spacing: 4) {
                                 Text(metroVM.startStation?.name ?? "—")
                                     .font(.body.bold())
-
-                                /// Transfer Info Button
-                                if let startStation = metroVM.startStation,
-                                   startStation.isTransferStation,
-                                   let lines = startStation.transferLines {
-                                    
-                                    Button {
-                                        selectedTransferStation = startStation
-                                        showingTransferPopover = true
-                                    } label: {
-                                        Image(systemName: "lightbulb.fill")
-                                            .font(.callout)
-                                            .foregroundStyle(Color.white.opacity(0.9))
-                                            .padding(6)
-                                            .background(
-                                                Circle()
-                                                    .fill(Color.gray.opacity(0.5))
-                                            )
-                                    }
-                                    .buttonStyle(.plain)
-                                    .popover(isPresented: Binding(
-                                        get: { showingTransferPopover && selectedTransferStation?.order == startStation.order },
-                                        set: { if !$0 { showingTransferPopover = false } }
-                                    )) {
-                                        VStack(spacing: 10) {
-                                            Text(String(format: "station.transfer.message".localized, lines.map { $0.displayName }.joined(separator: " \("common.and".localized) ")))
-                                                .font(.caption)
-                                                .foregroundColor(.primary)
-                                                .multilineTextAlignment(.center)
-                                            
-                                            HStack(spacing: 4) {
-                                                Image(systemName: "arrow.trianglehead.2.clockwise")
-                                                    .font(.caption.bold())
-                                                    .foregroundStyle(.primary)
-                                                
-                                                ForEach(lines, id: \.self) { transferLine in
-                                                    Image(systemName: "circlebadge.fill")
-                                                        .foregroundStyle(transferLine.color)
-                                                        .font(.callout)
-                                                }
-                                            }
-                                            .padding(.horizontal, 8)
-                                            .padding(.vertical, 4)
-                                            .background(
-                                                RoundedRectangle(cornerRadius: 12)
-                                                    .fill(Color.gray.opacity(0.4))
-                                            )
-                                        }
-                                        .padding(12)
-                                        .presentationCompactAdaptation(.popover)
-                                        .frame(width: 250)
-                                    }
-                                }
                             }
                         }
 
@@ -177,58 +122,6 @@ struct TrackingSheet: View {
 
                                                     Text(station.name)
                                                         .font(.footnote)
-
-                                                    /// Transfer Info Button
-                                                    if station.isTransferStation,
-                                                       let lines = station.transferLines {
-                                                        
-                                                        Button {
-                                                            selectedTransferStation = station
-                                                            showingTransferPopover = true
-                                                        } label: {
-                                                            Image(systemName: "lightbulb.fill")
-                                                                .font(.caption2)
-                                                                .foregroundStyle(Color.white.opacity(0.9))
-                                                                .padding(6)
-                                                                .background(
-                                                                    Circle()
-                                                                        .fill(Color.gray.opacity(0.5))
-                                                                )
-                                                        }
-                                                        .buttonStyle(.plain)
-                                                        .popover(isPresented: Binding(
-                                                            get: { showingTransferPopover && selectedTransferStation?.order == station.order },
-                                                            set: { if !$0 { showingTransferPopover = false } }
-                                                        )) {
-                                                            VStack(spacing: 10) {
-                                                                Text(String(format: "station.transfer.message".localized, lines.map { $0.displayName }.joined(separator: " \("common.and".localized) ")))
-                                                                    .font(.caption)
-                                                                    .foregroundColor(.primary)
-                                                                    .multilineTextAlignment(.center)
-                                                                
-                                                                HStack(spacing: 4) {
-                                                                    Image(systemName: "arrow.trianglehead.2.clockwise")
-                                                                        .font(.caption.bold())
-                                                                        .foregroundStyle(.primary)
-                                                                    
-                                                                    ForEach(lines, id: \.self) { transferLine in
-                                                                        Image(systemName: "circlebadge.fill")
-                                                                            .foregroundStyle(transferLine.color)
-                                                                            .font(.callout)
-                                                                    }
-                                                                }
-                                                                .padding(.horizontal, 8)
-                                                                .padding(.vertical, 4)
-                                                                .background(
-                                                                    RoundedRectangle(cornerRadius: 12)
-                                                                        .fill(Color.gray.opacity(0.4))
-                                                                )
-                                                            }
-                                                            .padding(12)
-                                                            .presentationCompactAdaptation(.popover)
-                                                            .frame(width: 250)
-                                                        }
-                                                    }
                                                 }
                                             }
 
@@ -262,59 +155,6 @@ struct TrackingSheet: View {
                                 HStack(spacing: 4) {
                                     Text(metroVM.selectedDestination?.name ?? "—")
                                         .font(.body.bold())
-
-                                    /// Transfer Info Button
-                                    if let destination = metroVM.selectedDestination,
-                                       destination.isTransferStation,
-                                       let lines = destination.transferLines {
-                                        
-                                        Button {
-                                            selectedTransferStation = destination
-                                            showingTransferPopover = true
-                                        } label: {
-                                            Image(systemName: "lightbulb.fill")
-                                                .font(.callout)
-                                                .foregroundStyle(Color.white.opacity(0.9))
-                                                .padding(6)
-                                                .background(
-                                                    Circle()
-                                                        .fill(Color.gray.opacity(0.5))
-                                                )
-                                        }
-                                        .buttonStyle(.plain)
-                                        .popover(isPresented: Binding(
-                                            get: { showingTransferPopover && selectedTransferStation?.order == destination.order },
-                                            set: { if !$0 { showingTransferPopover = false } }
-                                        )) {
-                                            VStack(spacing: 10) {
-                                                Text(String(format: "station.transfer.message".localized, lines.map { $0.displayName }.joined(separator: " \("common.and".localized) ")))
-                                                    .font(.caption)
-                                                    .foregroundColor(.primary)
-                                                    .multilineTextAlignment(.center)
-                                                
-                                                HStack(spacing: 4) {
-                                                    Image(systemName: "arrow.trianglehead.2.clockwise")
-                                                        .font(.caption.bold())
-                                                        .foregroundStyle(.primary)
-                                                    
-                                                    ForEach(lines, id: \.self) { transferLine in
-                                                        Image(systemName: "circlebadge.fill")
-                                                            .foregroundStyle(transferLine.color)
-                                                            .font(.callout)
-                                                    }
-                                                }
-                                                .padding(.horizontal, 8)
-                                                .padding(.vertical, 4)
-                                                .background(
-                                                    RoundedRectangle(cornerRadius: 12)
-                                                        .fill(Color.gray.opacity(0.4))
-                                                )
-                                            }
-                                            .padding(12)
-                                            .presentationCompactAdaptation(.popover)
-                                            .frame(width: 250)
-                                        }
-                                    }
                                 }
                             }
 

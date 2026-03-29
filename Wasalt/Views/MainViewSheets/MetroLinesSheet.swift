@@ -42,49 +42,14 @@ struct MetroLinesSheet: View {
 
                     // MARK: - Nearest Station Text
                     if let nearest = nearestStation {
-                        HStack(alignment: .top, spacing: 8) {
+                        HStack(spacing: 8) {
                             Image(systemName: "location.fill")
                                 .foregroundColor(.white)
                                 .font(.body)
 
-                            HStack(spacing: 6) {
-                                Text(String(format: "metroLines.nearestStation".localized, nearest.name))
-                                    .font(.subheadline)
-                                    .foregroundColor(.white)
-
-                                let lines = displayLines(for: nearest)
-
-                                /// Transform circles
-                                if !lines.isEmpty {
-                                    HStack(spacing: 2) {
-                                        if lines.count > 1 {
-                                            Image(systemName: "arrow.trianglehead.2.clockwise")
-                                                .font(.footnote)
-                                                .foregroundStyle(.white)
-                                        }
-                                        
-                                            ForEach(lines, id: \.self) { line in
-                                                Image(systemName: "circlebadge.fill")
-                                                    .foregroundStyle(line.color)
-                                                    .font(.body.bold())
-                                            }
-                                    }
-                                    .padding(.horizontal, 3)
-                                    .padding(.vertical, 4)
-                                    .background(
-                                        Group {
-                                            if lines.count > 1 {
-                                                RoundedRectangle(cornerRadius: 20)
-                                                    .fill(
-                                                        colorScheme == .dark
-                                                        ? Color.gray.opacity(0.5)
-                                                        : Color.white.opacity(0.3)
-                                                    )
-                                            }
-                                        }
-                                    )
-                                }
-                            }
+                            Text(String(format: "metroLines.nearestStation".localized, nearest.name))
+                                .font(.subheadline)
+                                .foregroundColor(.white)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 10)
@@ -99,7 +64,6 @@ struct MetroLinesSheet: View {
                                 metroVM.statusText = ""
                             } label: {
                                 HStack {
-
                                     Circle()
                                         .fill(line.color)
                                         .frame(width: 20, height: 20)
@@ -148,31 +112,11 @@ struct MetroLinesSheet: View {
     // MARK: - Helpers
     private func updateNearestStation() {
         guard let location = getCurrentLocation() else { return }
-
         nearestStation = MetroData.allStations.min { lhs, rhs in
             let lhsLoc = CLLocation(latitude: lhs.coordinate.latitude, longitude: lhs.coordinate.longitude)
             let rhsLoc = CLLocation(latitude: rhs.coordinate.latitude, longitude: rhs.coordinate.longitude)
             return lhsLoc.distance(from: location) < rhsLoc.distance(from: location)
         }
-    }
-
-    private func displayLines(for station: Station) -> [MetroLine] {
-        if station.isTransferStation, let lines = station.transferLines, !lines.isEmpty {
-            return lines
-        }
-        return linesForStationByCoordinate(station)
-    }
-
-    private func linesForStationByCoordinate(_ station: Station) -> [MetroLine] {
-        MetroLine.allCases.filter { line in
-            line.stations.contains(where: { isSamePhysicalStation($0, station) })
-        }
-    }
-
-    private func isSamePhysicalStation(_ a: Station, _ b: Station) -> Bool {
-        let aLoc = CLLocation(latitude: a.coordinate.latitude, longitude: a.coordinate.longitude)
-        let bLoc = CLLocation(latitude: b.coordinate.latitude, longitude: b.coordinate.longitude)
-        return aLoc.distance(from: bLoc) < 25
     }
 }
 

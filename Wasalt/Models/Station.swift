@@ -1,14 +1,12 @@
 //
-//  Station 2.swift
+//  Station.swift
 //  Wasalt
 //
-//  Created by Rana Alqubaly on 12/06/1447 AH.
-//
 
-// MARK: - Station Model
 import Foundation
 import CoreLocation
 
+// MARK: - Station Model
 struct Station: Identifiable {
 
     let id = UUID()
@@ -17,6 +15,4 @@ struct Station: Identifiable {
     let coordinate: CLLocationCoordinate2D
     let minutesToNext: Int?
     let minutesToPrevious: Int?
-    let isTransferStation: Bool
-    let transferLines: [MetroLine]?
 }

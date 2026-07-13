@@ -7,6 +7,8 @@ Wasalt is an iOS app that makes the Riyadh Metro accessible for people with hear
 <br>
 <img width="1920" height="1080" alt="Wasalt 3 34 19 AM" src="https://github.com/user-attachments/assets/0e5c10fc-b383-43e2-97c3-cb8536448dfd" />
 <br>
+<br>
+
 
 ## Features
 
@@ -18,6 +20,7 @@ Wasalt is an iOS app that makes the Riyadh Metro accessible for people with hear
 - **System notifications** as a fallback when the app isn't in the foreground
 - **Automatic direction handling** — trips work the same whether you ride forward or backward along a line
 - **Arabic & English localization** with an accessible, intuitive interface
+<br>
 
 ## How It Works
 
@@ -33,28 +36,8 @@ Because geofencing is handled by iOS rather than the app lifecycle, region entry
 
 Along the way, the trip engine continuously computes the nearest station, remaining stations, and ETA, and detects direction reversals by watching the rider's station order over time.
 
-## Architecture
+<br>
 
-MVVM with a small set of focused managers:
-
-```
-Wasalt
-├── App/                 # App entry + root view
-├── Models/              # Station, MetroLine (6 lines), MetroData
-│                        # (94 stations) + metro_lines.geojson
-├── Managers/            # LocationManager (GPS + geofences),
-│                        # InAppAlertManager (banner/vibration/flash),
-│                        # LocalNotificationManager (system alerts)
-├── ViewModels/          # MetroTrip, Map, Onboarding, Permission, Splash
-└── Views/               # MainView + sheets: StationPicker,
-                         # Tracking, Arrival, MetroLines
-```
-
-- **`MetroTripViewModel`** — the trip engine: direction detection (forward/backward), progress, ETA, upcoming stations, wrong-direction checks, and trip lifecycle
-- **`LocationManager`** — GPS updates, geofence registration/teardown, and the 2.5-hour trip expiry timer
-- **`InAppAlertManager`** — drives the accessible alert pattern: a timer toggles vibration (and the torch on arrival) every 0.35 s
-- **`LocalNotificationManager`** — location-triggered system notifications plus geofence-fallback alerts
-- **`MapViewModel`** — loads metro routes from GeoJSON and renders them as smooth polylines using Catmull-Rom spline interpolation
 
 ## Tech Stack
 
